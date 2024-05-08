@@ -1,0 +1,29 @@
+@echo all
+
+rem Creation des variables
+set "temp=.\temp"
+set "src=.\src"
+set "lib=..\test\lib"
+set "bin=.\bin"
+set "destination=..\test\lib"
+set "nomFramework=handmade_framework"
+
+rem Creation du repertoire [temp]
+mkdir "%temp%"
+
+rem Copie des fichiers Java du répertoire [src] vers [temp]
+xcopy "%src%\controller\*.java" "%temp%" /e /y
+
+rem Compilation des classes dans [temp] vers [bin]
+javac --release 8 -d "%bin%" -cp "%lib%\*" "%temp%\*.java"
+
+rem Ajout de l'application dans une archive war
+jar cvf "%nomFramework%.jar" -C "%bin%" .
+
+rem Deploiement de l'application vers Tomcat
+xcopy ".\%nomFramework%.jar" "%destination%" /y
+
+rem Supression de [temp]
+rmdir /s /q "%temp%"
+
+pause
