@@ -16,11 +16,12 @@ xcopy "%src%\controller\*.java" "%temp%" /e /y
 
 rem Compilation des classes dans [temp] vers [bin]
 javac --release 8 -d "%bin%" -cp "%lib%\*" "%temp%\*.java"
+rem Si "servlet-api.jar" est configurer dans CLASSPATH, enlever "-cp "%lib%\*" "
 
 rem Ajout de l'application dans une archive jar
 jar cvf "%nomFramework%.jar" -C "%bin%" .
 
-rem Deploiement de l'application vers Tomcat
+rem Envoie de l'archive jar vers le [lib] du test
 xcopy ".\%nomFramework%.jar" "%destination%" /y
 
 rem Supression de [temp]
