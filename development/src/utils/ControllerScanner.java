@@ -9,9 +9,7 @@ import java.util.List;
 
 public class ControllerScanner {
 
-    public List<Class<?>> findControllers(String packageName) 
-        throws ClassNotFoundException, IOException 
-    {
+    public List<Class<?>> findControllers(String packageName) throws ClassNotFoundException, IOException {
         List<Class<?>> controllers = new ArrayList<>();
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
 
