@@ -14,6 +14,7 @@ mkdir "%temp%"
 rem Copie des fichiers Java du répertoire [src] vers [temp]
 xcopy "%src%\annotation\*.java" "%temp%" /e /y
 xcopy "%src%\controller\*.java" "%temp%" /e /y
+xcopy "%src%\reflect\*.java" "%temp%" /e /y
 xcopy "%src%\utils\*.java" "%temp%" /e /y
 
 rem Compilation des classes dans [temp] vers [bin]
