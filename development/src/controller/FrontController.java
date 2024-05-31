@@ -1,6 +1,7 @@
 package controller;
 
 import java.io.*;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.List;
@@ -9,6 +10,7 @@ import javax.servlet.http.*;
 
 import annotation.AnnotationController;
 import annotation.Get;
+import reflect.Reflect;
 import utils.*;
 
 @AnnotationController(name = "big_controller")
@@ -92,6 +94,9 @@ public class FrontController extends HttpServlet {
                 out.println("<h2> Listes des Controllers trouves: </h2>");
                 out.println("<p>Class: " + mapping.getClassName() + "</p>");
                 out.println("<p>Method: " + mapping.getMethodName() + "</p>");
+                out.println("<p>---------------------------------------------------------------</p>");
+                out.println("<p>Result: " + invokeMappedMethod(mapping) + "</p>");
+                out.println("<p>---------------------------------------------------------------</p>");
             } else {
                 out.println("<p>Aucune méthode associée</p>");
             }
@@ -142,4 +147,9 @@ public class FrontController extends HttpServlet {
             }
         }
     }
+
+    public Object invokeMappedMethod(Mapping mapping) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, InstantiationException, ClassNotFoundException {
+        return Reflect.invokeMethod(Reflect.invokeEmptyConstructor(mapping.getClassName()), mapping.getMethodName(), null);
+    }
+
 }
