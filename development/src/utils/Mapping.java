@@ -1,5 +1,9 @@
 package utils;
 
+import java.lang.reflect.InvocationTargetException;
+
+import reflect.Reflect;
+
 public class Mapping {
 
     private String methodName;
@@ -36,4 +40,9 @@ public class Mapping {
                 ", className='" + className + '\'' +
                 '}';
     }
+
+    public Object invokeMethod() throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, InstantiationException, ClassNotFoundException {
+        return Reflect.invokeMethod(Reflect.invokeEmptyConstructor(this.getClassName()), this.getMethodName(), null);
+    }
+
 }
