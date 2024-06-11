@@ -18,7 +18,7 @@ xcopy "%src%\reflect\*.java" "%temp%" /e /y
 xcopy "%src%\utils\*.java" "%temp%" /e /y
 
 rem Compilation des classes dans [temp] vers [bin]
-javac --release 8 -d "%bin%" -cp "%lib%\*" "%temp%\*.java"
+javac --release 8 -d %bin% -cp %lib%\* %temp%\*.java
 rem Si "servlet-api.jar" est configurer dans CLASSPATH, enlever "-cp "%lib%\*" "
 
 rem Ajout de l'application dans une archive jar

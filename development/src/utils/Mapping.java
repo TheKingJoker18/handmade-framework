@@ -1,6 +1,11 @@
 package utils;
 
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import reflect.Reflect;
 
@@ -43,6 +48,28 @@ public class Mapping {
 
     public Object invokeMethod() throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, InstantiationException, ClassNotFoundException {
         return Reflect.invokeMethod(Reflect.invokeEmptyConstructor(this.getClassName()), this.getMethodName(), null);
+    }
+
+    public String execute(HttpServletRequest request, HttpServletResponse response) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, InstantiationException, ClassNotFoundException, ServletException, IOException {
+        String print = "";
+        print += "<hr/>";
+        print += "<h2> Listes des Controllers trouves: </h2>";
+        print += "<p>Class: " + this.getClassName() + "</p>";
+        print += "<p>Method: " + this.getMethodName() + "</p>";
+        Object result = this.invokeMethod();
+        print += "<p>---------------------------------------------------------------</p>";
+        if (result instanceof String) {
+            print += "<p>Result: " + (String) result + "</p>";
+                
+        } else if (result instanceof ModelView) {
+            ModelView mv = (ModelView)result;
+            mv.prepareModelView(request, response);
+
+        } else {
+            throw new ServletException("The returned object Class is not known");
+        }
+        print += "<p>---------------------------------------------------------------</p>";
+        return print;
     }
 
 }

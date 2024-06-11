@@ -1,6 +1,7 @@
 package controller;
 
 import java.io.*;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.List;
@@ -19,7 +20,7 @@ public class FrontController extends HttpServlet {
     private ControllerScanner scanner;
     private List<Class<?>> controllers;
     private HashMap<String, Mapping> methodList;
-
+    
     public void init(ServletConfig config) throws ServletException {
         try {
             super.init(config);
@@ -47,113 +48,99 @@ public class FrontController extends HttpServlet {
         }
     }
 
-    public void initMethodList() {
-        try {
-            if (this.controllers != null) {
-                for (Class<?> controller : this.controllers) {
-                    System.out.println("Scanning controller: " + controller.getName()); // Debug
-                    findMethodsAnnoted(controller);
-                }
-            } else {
-                System.out.println("No controllers found"); // Debug
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
+    public String processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, InstantiationException, ClassNotFoundException {
+        // Get the context path and request URI
+        String contextPath = request.getContextPath();
+        String requestURI = request.getRequestURI();
+
+        // Remove the context path from the request URI
+        String relativeURI = requestURI.substring(contextPath.length());
+
+        String print = "<h1>Code 200</h1>";
+        print += "<p>Vous avez entre avec succes dans ce site :) </p>";
+        print += "<p>Page URL: <b>" + relativeURI + "</b> </p>";
+
+        if (methodList != null) {
+            print += printMethodList();
+        } else {
+            print += "methodList is null"; // Debug
         }
-    }
 
-    public void processRequest(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
-        res.setContentType("text/html");
-        PrintWriter out = res.getWriter();
+        Mapping mapping = methodList.get(relativeURI);
+        if (mapping != null) {
+            print += mapping.execute(request, response);
 
-        try {
-            // Get the context path and request URI
-            String contextPath = req.getContextPath();
-            String requestURI = req.getRequestURI();
-
-            // Remove the context path from the request URI
-            String relativeURI = requestURI.substring(contextPath.length());
-
-            out.println("<h1>Code 200</h1>");
-            out.println("<p>Vous avez entre avec succes dans ce site :) </p>");
-            out.println("<p>Page URL: <b>" + relativeURI + "</b> </p>");
-
-            if (methodList != null) {
-                for (String key : methodList.keySet()) {
-                    Mapping mapping = methodList.get(key);
-                    out.println("Mapping - Path: " + key + ", Class: " + mapping.getClassName() + ", Method: " + mapping.getMethodName() + "<br>");
-                }
-            } else {
-                System.out.println("methodList is null"); // Debug
+        } else {
+            if (relativeURI.compareTo("/") != 0) {
+                throw new ServletException("The URL is not associated with an method");
             }
-
-            Mapping mapping = methodList.get(relativeURI);
-            if (mapping != null) {
-                out.println("<hr/>");
-                out.println("<h2> Listes des Controllers trouves: </h2>");
-                out.println("<p>Class: " + mapping.getClassName() + "</p>");
-                out.println("<p>Method: " + mapping.getMethodName() + "</p>");
-                Object result = mapping.invokeMethod();
-                out.println("<p>---------------------------------------------------------------</p>");
-                if (result instanceof String) {
-                    out.println("<p>Result: " + (String) result + "</p>");
-                
-                } else if (result instanceof ModelView) {
-                    ModelView mv = (ModelView)result;
-                    mv.prepareModelView(req, res);
-
-                } else {
-                    out.println("Class non reconnu...");
-                }
-                out.println("<p>---------------------------------------------------------------</p>");
-
-            } else {
-                out.println("<p>Aucune méthode associée</p>");
-            }
-
-        } catch (Exception e) {
-            e.printStackTrace();
         }
+        return print;
     }
 
     public void doGet(HttpServletRequest req, HttpServletResponse res) throws IOException, ServletException {
         res.setContentType("text/html");
         PrintWriter out = res.getWriter();
+        String print = "";
 
         try {
-            processRequest(req, res);
-            out.println("<h2>Request method: GET</h2>");
+            print = processRequest(req, res);
+            print += "<h2>Request method: GET</h2>";
+            out.println(print);
 
         } catch (Exception e) {
-            out.println("<h1>Code 400</h1>");
-            out.println("<p>An error has occurred: " + e.getMessage() + "</p>");
-            e.printStackTrace();
+            throw new ServletException(e);
         }
     }
 
     public void doPost(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
         res.setContentType("text/html");
         PrintWriter out = res.getWriter();
+        String print = "";
 
         try {
-            processRequest(req, res);
-            out.println("<h2>Request method: POST</h2>");
+            print = processRequest(req, res);
+            print += "<h2>Request method: POST</h2>";
+            out.println(print);
             
         } catch (Exception e) {
-            out.println("<h1>Code 400</h1>");
-            out.println("<p>An error has occurred: " + e.getMessage() + "</p>");
-            e.printStackTrace();
+            throw new ServletException(e);
         }
     }
 
-    public void findMethodsAnnoted(Class<?> clazz) {
+    public void initMethodList() throws ServletException {
+        if (this.controllers != null) {
+            for (Class<?> controller : this.controllers) {
+                System.out.println("Scanning controller: " + controller.getName()); // Debug
+                findMethodsAnnoted(controller);
+            }
+        } else {
+            System.out.println("No controllers found"); // Debug
+        }
+    }
+
+    public String printMethodList() {
+        String print = "";
+        for (String key : methodList.keySet()) {
+            Mapping mapping = methodList.get(key);
+            print += "Mapping - Path: \"" + key + "\", Class: \"" + mapping.getClassName() + "\", Method: \"" + mapping.getMethodName() + "\"<br>";
+        }
+        return print;
+    }
+
+    public void findMethodsAnnoted(Class<?> clazz) throws ServletException {
         Method[] methods = clazz.getDeclaredMethods();
         for (Method method : methods) {
             if (method.isAnnotationPresent(Get.class)) {
                 Get getAnnotation = method.getAnnotation(Get.class);
                 Mapping map = new Mapping(method.getName(), clazz.getName());
-                methodList.put(getAnnotation.value(), map);
-                // System.out.println("Method: " + method.getName() + ", Path: " + getAnnotation.value()); // Debug
+                Mapping m = methodList.get(getAnnotation.value());
+                if (m == null) {
+                    methodList.put(getAnnotation.value(), map);
+                    // System.out.println("Method: " + method.getName() + ", Path: " + getAnnotation.value()); // Debug
+                } else {
+                    throw new ServletException("An URL of mapping must be unique, but \"" + getAnnotation.value() + "\" is duplicated");
+                }
             }
         }
     }
