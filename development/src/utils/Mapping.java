@@ -56,15 +56,19 @@ public class Mapping {
             Object[] values = new Object[parameters.length];
             for (int i = 0; i < parameters.length; i++) {
                 Param param = parameters[i].getAnnotation(Param.class);
-                if (param == null) {
-                    throw new NullPointerException("There is no annotation @Param on this parameter");
+                String paramName = null;
+                if (param == null)                                      paramName = parameters[i].getName();
+                else                                                    paramName = param.name();
+                String paramValue = request.getParameter(paramName);
+                if (paramValue == null) {
+                    throw new NullPointerException("There is an undefined parameter (parameter name : " + paramName + ")");
                 } else {
-                    String paramName = param.name();
-                    if (parameters[i].getType() == int.class)           values[i] = Integer.valueOf(request.getParameter(paramName));
-                    else if (parameters[i].getType() == double.class)   values[i] = Double.valueOf(request.getParameter(paramName));
-                    else if (parameters[i].getType() == float.class)    values[i] = Float.valueOf(request.getParameter(paramName));
-                    else                                                values[i] = (String) request.getParameter(paramName);
+                    if (parameters[i].getType() == int.class)           values[i] = Integer.valueOf(paramValue);
+                    else if (parameters[i].getType() == double.class)   values[i] = Double.valueOf(paramValue);
+                    else if (parameters[i].getType() == float.class)    values[i] = Float.valueOf(paramValue);
+                    else                                                values[i] = (String) paramValue;
                 }
+                
             }
             return Reflect.invokeMethod(Reflect.invokeEmptyConstructor(this.getClassName()), this.getMethodName(), values);
         }
