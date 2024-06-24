@@ -1,9 +1,19 @@
 package reflect;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
+import annotation.ModelField;
+
 public class Reflect {
+
+    public static String capitalizeFirstLetter(String str) {
+        char premiereLettre = str.charAt(0);
+        String resteChaine = str.substring(1);
+        String strMaj = Character.toUpperCase(premiereLettre) + resteChaine;
+        return strMaj;
+    }
 
     public static String getClassName(Object obj) {
         return obj.getClass().getName();
@@ -11,6 +21,19 @@ public class Reflect {
 
     public static String getClassSimpleName(Object obj) {
         return obj.getClass().getSimpleName();
+    }
+
+    public static String[] getFieldsNames(Object obj) {
+        Field[] fields = obj.getClass().getDeclaredFields();
+        String[] fieldsNames = new String[fields.length];
+
+        for (int i = 0; i < fields.length; i++) {
+            ModelField field = fields[i].getAnnotation(ModelField.class);
+            if (field == null)              fieldsNames[i] = fields[i].getName();
+            else                            fieldsNames[i] = field.name();
+        }
+
+        return fieldsNames;
     }
 
     public static Method getMethodByName(Object obj, String methodName) {
@@ -45,6 +68,10 @@ public class Reflect {
 
     public static Object invokeMethod(Object obj, String methodName, Object[] args) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
         return Reflect.getMethod(obj, methodName, args).invoke(obj, args);
+    }
+
+    public static void invokeSetterMethod(Object obj, String fieldName, Class<?> fieldClass, Object value) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException {
+        obj.getClass().getMethod("set" + capitalizeFirstLetter(fieldName), fieldClass).invoke(obj, value);
     }
 
     public static Object invokeEmptyConstructor(String className) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, ClassNotFoundException {
