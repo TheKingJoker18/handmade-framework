@@ -89,7 +89,11 @@ public class FrontController extends HttpServlet {
             out.println(print);
 
         } catch (Exception e) {
-            throw new ServletException(e);
+            print = "<h1>Code 400</h1>";
+            print += "<hr/>";
+            print += "<p>There was an error processing the request: <b>ETU002556 <br/> " + e.getMessage() + " </b> <p>";
+            e.printStackTrace();
+            out.println(print);
         }
     }
 
@@ -104,7 +108,11 @@ public class FrontController extends HttpServlet {
             out.println(print);
             
         } catch (Exception e) {
-            throw new ServletException(e);
+            print = "<h1>Code 400</h1>";
+            print += "<hr/>";
+            print += "<p>There was an error processing the request: <b>ETU002556 <br/> " + e.getMessage() + " </b> <p>";
+            e.printStackTrace();
+            out.println(print);
         }
     }
 
