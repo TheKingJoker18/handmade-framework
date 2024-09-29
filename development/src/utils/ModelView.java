@@ -9,6 +9,8 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import com.google.gson.Gson;
+
 public class ModelView {
     String url;
     HashMap<String, Object> data;
@@ -53,6 +55,12 @@ public class ModelView {
             request.setAttribute(entry.getKey(), entry.getValue());
         }
         dispatcher.forward(request, response);
+    }
+
+    public String toJson() {
+        Gson gson = new Gson();
+        String json = gson.toJson(this);
+        return json;
     }
 
 }
