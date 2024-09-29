@@ -12,6 +12,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import annotation.ModelAttribute;
 import annotation.Param;
+import annotation.Restapi;
 import reflect.Reflect;
 
 public class Mapping {
@@ -66,8 +67,10 @@ public class Mapping {
             else if (parameters[i].getType() == MySession.class) {
                 if (Reflect.getFieldValueByType(controller, MySession.class) != null) {
                     values[i] = (MySession) Reflect.getFieldValueByType(controller, MySession.class);
+                    System.out.println("Field Utilisation...");
                 } else {
                     values[i] = new MySession(request.getSession());
+                    System.out.println("Parameter Utilisation...");
                 }
             }
             else                                                            values[i] = (String) paramValue;
@@ -119,7 +122,16 @@ public class Mapping {
         return Reflect.invokeMethod(controller, this.getMethodName(), null);
     }
 
-    public String execute(HttpServletRequest request, HttpServletResponse response) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, ClassNotFoundException, ServletException, IOException {
+    public boolean checkIfMethodHaveRestapiAnnotation(HttpServletRequest request) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, ClassNotFoundException {
+        Object controller = Reflect.invokeControllerConstructor(this.getClassName(), request);
+        Method method = Reflect.getMethodByName(controller, this.getMethodName());
+        if (method.isAnnotationPresent(Restapi.class)) {
+            return true;
+        }
+        return false;
+    }
+
+    public String execute_html(HttpServletRequest request, HttpServletResponse response) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, ClassNotFoundException, ServletException, IOException {
         String print = "";
         print += "<hr/>";
         print += "<h2> Listes des Controllers trouves: </h2>";
@@ -139,6 +151,22 @@ public class Mapping {
         }
         print += "<p>---------------------------------------------------------------</p>";
         return print;
+    }
+
+    public String execute_json(HttpServletRequest request, HttpServletResponse response) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, ClassNotFoundException, ServletException {
+        String json = "data: ";
+        Object result = this.invokeMethod(request);
+        if (result instanceof String) {
+            json += "{\"string\":\"" + (String) result + "\"}";
+                
+        } else if (result instanceof ModelView) {
+            ModelView mv = (ModelView)result;
+            json += mv.toJson();
+
+        } else {
+            throw new ServletException("The returned object Class is not known");
+        }
+        return json;
     }
 
 }

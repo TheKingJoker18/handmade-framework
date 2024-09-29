@@ -48,15 +48,10 @@ public class FrontController extends HttpServlet {
         }
     }
 
-    public String processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, InstantiationException, ClassNotFoundException {
-        // Get the context path and request URI
-        String contextPath = request.getContextPath();
-        String requestURI = request.getRequestURI();
-
-        // Remove the context path from the request URI
-        String relativeURI = requestURI.substring(contextPath.length());
-
-        String print = "<h1>Code 200</h1>";
+    public String executeControllerMethod(Mapping mapping, HttpServletRequest request, HttpServletResponse response, String relativeURI) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, ClassNotFoundException, ServletException, IOException {
+        String print = "";
+        response.setContentType("text/html");
+        print = "<h1>Code 200</h1>";
         print += "<p>Vous avez entre avec succes dans ce site :) </p>";
         print += "<p>Page URL: <b>" + relativeURI + "</b> </p>";
 
@@ -66,29 +61,57 @@ public class FrontController extends HttpServlet {
             print += "methodList is null"; // Debug
         }
 
-        Mapping mapping = methodList.get(relativeURI);
         if (mapping != null) {
-            print += mapping.execute(request, response);
+            if (mapping.checkIfMethodHaveRestapiAnnotation(request)) {
+                response.setContentType("text/json");
+                print = mapping.execute_json(request, response);
+    
+            } else {
+                print += mapping.execute_html(request, response);
+
+                String method = request.getMethod();
+                if (method.equalsIgnoreCase("GET")) {
+                    print += "<h2>Request method: GET</h2>";
+                } else if (method.equalsIgnoreCase("POST")) {
+                    print += "<h2>Request method: POST</h2>";
+                }
+            }
 
         } else {
             if (relativeURI.compareTo("/") != 0) {
                 throw new ServletException("The URL is not associated with an method");
             }
         }
+
+        return print;
+    }
+
+    public String processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, InstantiationException, ClassNotFoundException {
+        String print = "";
+
+        // Get the context path and request URI
+        String contextPath = request.getContextPath();
+        String requestURI = request.getRequestURI();
+
+        // Remove the context path from the request URI
+        String relativeURI = requestURI.substring(contextPath.length());
+
+        Mapping mapping = methodList.get(relativeURI);
+        print = executeControllerMethod(mapping, request, response, relativeURI);
+
         return print;
     }
 
     public void doGet(HttpServletRequest req, HttpServletResponse res) throws IOException, ServletException {
-        res.setContentType("text/html");
         PrintWriter out = res.getWriter();
         String print = "";
 
         try {
             print = processRequest(req, res);
-            print += "<h2>Request method: GET</h2>";
             out.println(print);
 
         } catch (Exception e) {
+            res.setContentType("text/html");
             print = "<h1>Code 400</h1>";
             print += "<hr/>";
             print += "<p>There was an error processing the request: <b>ETU002556 <br/> " + e.getMessage() + " </b> <p>";
@@ -98,16 +121,15 @@ public class FrontController extends HttpServlet {
     }
 
     public void doPost(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
-        res.setContentType("text/html");
         PrintWriter out = res.getWriter();
         String print = "";
 
         try {
             print = processRequest(req, res);
-            print += "<h2>Request method: POST</h2>";
             out.println(print);
             
         } catch (Exception e) {
+            res.setContentType("text/html");
             print = "<h1>Code 400</h1>";
             print += "<hr/>";
             print += "<p>There was an error processing the request: <b>ETU002556 <br/> " + e.getMessage() + " </b> <p>";
