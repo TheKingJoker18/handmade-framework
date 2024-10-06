@@ -10,7 +10,8 @@ import javax.servlet.*;
 import javax.servlet.http.*;
 
 import annotation.AnnotationController;
-import annotation.Get;
+import annotation.Post;
+import annotation.Url;
 import utils.*;
 
 @AnnotationController(name = "big_controller")
@@ -62,6 +63,11 @@ public class FrontController extends HttpServlet {
         }
 
         if (mapping != null) {
+            String method = request.getMethod();
+            if (!method.equalsIgnoreCase(mapping.getVerb())) {
+                throw new ServletException("The method used by the user('" + method + "') and the VERB('" + mapping.getVerb() + "') doesn't match");
+            }
+
             if (mapping.checkIfMethodHaveRestapiAnnotation(request)) {
                 response.setContentType("text/json");
                 print = mapping.execute_json(request, response);
@@ -69,7 +75,6 @@ public class FrontController extends HttpServlet {
             } else {
                 print += mapping.execute_html(request, response);
 
-                String method = request.getMethod();
                 if (method.equalsIgnoreCase("GET")) {
                     print += "<h2>Request method: GET</h2>";
                 } else if (method.equalsIgnoreCase("POST")) {
@@ -153,7 +158,7 @@ public class FrontController extends HttpServlet {
         String print = "";
         for (String key : methodList.keySet()) {
             Mapping mapping = methodList.get(key);
-            print += "Mapping - Path: \"" + key + "\", Class: \"" + mapping.getClassName() + "\", Method: \"" + mapping.getMethodName() + "\"<br>";
+            print += "Mapping - Path: \"" + key + "\", Class: \"" + mapping.getClassName() + "\", Method: \"" + mapping.getMethodName() + "\", VERB: \"" + mapping.getVerb() + "\"<br>";
         }
         return print;
     }
@@ -161,15 +166,17 @@ public class FrontController extends HttpServlet {
     public void findMethodsAnnoted(Class<?> clazz) throws ServletException {
         Method[] methods = clazz.getDeclaredMethods();
         for (Method method : methods) {
-            if (method.isAnnotationPresent(Get.class)) {
-                Get getAnnotation = method.getAnnotation(Get.class);
-                Mapping map = new Mapping(method.getName(), clazz.getName());
-                Mapping m = methodList.get(getAnnotation.value());
+            if (method.isAnnotationPresent(Url.class)) {
+                Url url_annotation = method.getAnnotation(Url.class);
+                Post post_annotation = method.getAnnotation(Post.class);
+                String verb = (post_annotation == null) ? "GET" : "POST";
+                Mapping map = new Mapping(method.getName(), clazz.getName(), verb);
+                Mapping m = methodList.get(url_annotation.value());
                 if (m == null) {
-                    methodList.put(getAnnotation.value(), map);
-                    // System.out.println("Method: " + method.getName() + ", Path: " + getAnnotation.value()); // Debug
+                    methodList.put(url_annotation.value(), map);
+                    // System.out.println("Method: " + method.getName() + ", Path: " + url_annotation.value()); // Debug
                 } else {
-                    throw new ServletException("An URL of mapping must be unique, but \"" + getAnnotation.value() + "\" is duplicated");
+                    throw new ServletException("An URL of mapping must be unique, but \"" + url_annotation.value() + "\" is duplicated");
                 }
             }
         }

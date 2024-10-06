@@ -16,22 +16,22 @@ import annotation.Restapi;
 import reflect.Reflect;
 
 public class Mapping {
-
     private String methodName;
     private String className;
+    private String verb;
 
     public Mapping() {
     }
 
-    public Mapping(String methodName, String className) {
+    public Mapping(String methodName, String className, String verb) {
         this.methodName = methodName;
         this.className = className;
+        this.verb = verb;
     }
 
     public String getMethodName() {
         return methodName;
     }
-
     public void setMethodName(String methodName) {
         this.methodName = methodName;
     }
@@ -39,9 +39,15 @@ public class Mapping {
     public String getClassName() {
         return className;
     }
-
     public void setClassName(String className) {
         this.className = className;
+    }
+
+    public String getVerb() {
+        return this.verb;
+    }
+    public void setVerb(String verb) {
+        this.verb = verb;
     }
 
     @Override
@@ -49,6 +55,7 @@ public class Mapping {
         return "Mapping{" +
                 "methodName='" + methodName + '\'' +
                 ", className='" + className + '\'' +
+                ", verb='" + verb + '\'' +
                 '}';
     }
 
