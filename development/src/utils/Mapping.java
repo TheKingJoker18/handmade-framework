@@ -5,6 +5,8 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -16,25 +18,9 @@ import annotation.Restapi;
 import reflect.Reflect;
 
 public class Mapping {
-    private String methodName;
     private String className;
-    private String verb;
-
-    public Mapping() {
-    }
-
-    public Mapping(String methodName, String className, String verb) {
-        this.methodName = methodName;
-        this.className = className;
-        this.verb = verb;
-    }
-
-    public String getMethodName() {
-        return methodName;
-    }
-    public void setMethodName(String methodName) {
-        this.methodName = methodName;
-    }
+    private Set<VerbAction> ls_verbAction;
+    private VerbAction action;
 
     public String getClassName() {
         return className;
@@ -43,20 +29,60 @@ public class Mapping {
         this.className = className;
     }
 
-    public String getVerb() {
-        return this.verb;
+    public Set<VerbAction> getLs_verbAction() {
+        return this.ls_verbAction;
     }
-    public void setVerb(String verb) {
-        this.verb = verb;
+    public void setLs_verbAction(Set<VerbAction> ls_verbAction) {
+        this.ls_verbAction = ls_verbAction;
+    }
+    public void putVerbAction(VerbAction verbAction) {
+        Set<VerbAction> ls_verbAction = this.getLs_verbAction();
+        ls_verbAction.add(verbAction);
+        this.setLs_verbAction(ls_verbAction);
+    }
+
+    public VerbAction getAction() {
+        return this.action;
+    }
+    public void setAction(VerbAction action) {
+        this.action = action;
+    }
+
+    public Mapping() {}
+    public Mapping(String className, Set<VerbAction> ls_verbAction) {
+        this.setClassName(className);
+        this.setLs_verbAction(ls_verbAction);
+    }
+    public Mapping(String className, String methodName, String verb) {
+        this.setClassName(className);
+        Set<VerbAction> ls_verbAction = new HashSet<VerbAction>();
+        ls_verbAction.add(new VerbAction(methodName, verb));
+        this.setLs_verbAction(ls_verbAction);
     }
 
     @Override
     public String toString() {
-        return "Mapping{" +
-                "methodName='" + methodName + '\'' +
-                ", className='" + className + '\'' +
-                ", verb='" + verb + '\'' +
-                '}';
+        String string = "Mapping{"; 
+        string += ", className='" + className + '\'';
+        for (VerbAction verbAction : this.getLs_verbAction()) {
+            string += verbAction.toString();
+        }
+        string += '}';
+        return string;
+    }
+
+    public boolean checkIfVerbExists(String verb) {
+        for (VerbAction verbAction : this.getLs_verbAction()) {
+            if (verbAction.getVerb().equalsIgnoreCase(verb)) return true;
+        }
+        return false;
+    }
+
+    public VerbAction getVerbActionByVerb(String verb) {
+        for (VerbAction verbAction : this.getLs_verbAction()) {
+            if (verbAction.getVerb().equalsIgnoreCase(verb)) return verbAction;
+        }
+        return null;
     }
 
     public void setSimpleParam(Object controller, int i, Parameter[] parameters, Object[] values, HttpServletRequest request) throws NullPointerException, IllegalArgumentException, IllegalAccessException, InvocationTargetException, NoSuchMethodException, SecurityException {
@@ -119,19 +145,19 @@ public class Mapping {
 
     public Object invokeMethod(HttpServletRequest request) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, ClassNotFoundException {
         Object controller = Reflect.invokeControllerConstructor(this.getClassName(), request);
-        Method method = Reflect.getMethodByName(controller, this.getMethodName());
+        Method method = Reflect.getMethodByName(controller, action.getMethodName());
         Parameter[] parameters = method.getParameters();
         if (parameters.length > 0) {
             Object[] values = new Object[parameters.length];
             configParam(controller, parameters, values, request);
-            return Reflect.invokeMethod(controller, this.getMethodName(), values);
+            return Reflect.invokeMethod(controller, action.getMethodName(), values);
         }
-        return Reflect.invokeMethod(controller, this.getMethodName(), null);
+        return Reflect.invokeMethod(controller, action.getMethodName(), null);
     }
 
     public boolean checkIfMethodHaveRestapiAnnotation(HttpServletRequest request) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, ClassNotFoundException {
         Object controller = Reflect.invokeControllerConstructor(this.getClassName(), request);
-        Method method = Reflect.getMethodByName(controller, this.getMethodName());
+        Method method = Reflect.getMethodByName(controller, action.getMethodName());
         if (method.isAnnotationPresent(Restapi.class)) {
             return true;
         }
@@ -143,7 +169,7 @@ public class Mapping {
         print += "<hr/>";
         print += "<h2> Listes des Controllers trouves: </h2>";
         print += "<p>Class: " + this.getClassName() + "</p>";
-        print += "<p>Method: " + this.getMethodName() + "</p>";
+        print += "<p>Method: " + action.getMethodName() + "</p>";
         Object result = this.invokeMethod(request);
         print += "<p>---------------------------------------------------------------</p>";
         if (result instanceof String) {
