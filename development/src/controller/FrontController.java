@@ -6,12 +6,14 @@ import java.util.HashMap;
 import java.util.List;
 
 import javax.servlet.*;
+import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.http.*;
 
 import annotation.AnnotationController;
 import exception.MyException;
 import utils.*;
 
+@MultipartConfig
 @AnnotationController(name = "big_controller")
 public class FrontController extends HttpServlet {
     private String controllerPackage;

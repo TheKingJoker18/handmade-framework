@@ -10,6 +10,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import annotation.AnnotationController;
 import annotation.Post;
 import annotation.Url;
 import controller.FrontController;
@@ -26,17 +27,22 @@ public class FrontControllerMethod {
                 Post post_annotation = method.getAnnotation(Post.class);
 
                 String verb = (post_annotation == null) ? "GET" : "POST";
-                Mapping m = methodList.get(url_annotation.value());
+
+                // Fetching the AnnotationController from the controller to concatenate it with the url of the method to separate the methods of each controller
+                AnnotationController annotation_controller = clazz.getAnnotation(AnnotationController.class);
+                String url_path = annotation_controller.name() + url_annotation.value();
+
+                Mapping m = methodList.get(url_path);
                 if (m == null) {
                     Mapping map = new Mapping(clazz.getName(), method.getName(), verb);
-                    methodList.put(url_annotation.value(), map);
-                    // System.out.println("Method: " + method.getName() + ", Path: " + url_annotation.value()); // Debug
+                    methodList.put(url_path, map);
+                    // System.out.println("Method: " + method.getName() + ", Path: " + url_path); // Debug
                 } else {
                     VerbAction verbAction = m.getVerbActionByVerb(verb);
                     if (verbAction == null) {
                         verbAction = new VerbAction(method.getName(), verb);
                         m.putVerbAction(verbAction);
-                        methodList.put(url_annotation.value(), m);
+                        methodList.put(url_path, m);
                     } else {
                         System.out.println("An URL of mapping with the verb \"" + verb + "\" must be unique, but \"" + url_annotation.value() + "\" is duplicated (referenced method: '" + method.getName() + "')");
                     }
@@ -99,7 +105,7 @@ public class FrontControllerMethod {
             String method = request.getMethod();
             mapping.setAction(mapping.getVerbActionByVerb(method));
             if (!mapping.checkIfVerbExists(method)) {
-                throw new MyException(405, "The VERB used by the user('" + method + "') hasn't been defined");
+                throw new MyException(500, "The VERB used by the user('" + method + "') hasn't been defined");
             }
 
             if (mapping.checkIfMethodHaveRestapiAnnotation(request)) {
