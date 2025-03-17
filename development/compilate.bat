@@ -8,6 +8,11 @@ set "bin=.\bin"
 set "destination=..\test\lib"
 set "nomFramework=handmade_framework"
 
+rem Suppression du repertoire [bin] s'il existe
+if exist "%bin%\" (
+    rmdir /s /q "%bin%"
+)
+
 rem Creation du repertoire [temp]
 mkdir "%temp%"
 

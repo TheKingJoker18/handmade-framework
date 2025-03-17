@@ -85,7 +85,7 @@ public class Mapping {
         return null;
     }
 
-    public void setSimpleParam(Object controller, int i, Parameter[] parameters, Object[] values, HttpServletRequest request) throws NullPointerException, IllegalArgumentException, IllegalAccessException, InvocationTargetException, NoSuchMethodException, SecurityException, IOException, ServletException {
+    public void setSimpleParam(Object controller, Method method, int i, Parameter[] parameters, Object[] values, HttpServletRequest request) throws NullPointerException, IllegalArgumentException, IllegalAccessException, InvocationTargetException, NoSuchMethodException, SecurityException, IOException, ServletException {
         Param param = parameters[i].getAnnotation(Param.class);
         String paramName = null;
         if (parameters[i].getType() != MySession.class && param == null)    throw new IllegalArgumentException("There is no @Param annotation on the parameter (parameter place : no." + (i + 1) + " ) ");
@@ -97,6 +97,8 @@ public class Mapping {
             if (parameters[i].getType() == int.class)                       values[i] = Integer.valueOf(paramValue);
             else if (parameters[i].getType() == double.class)               values[i] = Double.valueOf(paramValue);
             else if (parameters[i].getType() == float.class)                values[i] = Float.valueOf(paramValue);
+            else if (parameters[i].getType() == java.sql.Date.class)        values[i] = java.sql.Date.valueOf(paramValue);
+            else if (parameters[i].getType() == String.class)               values[i] = (String) paramValue;
             else if (parameters[i].getType() == FileUpload.class) {
                 values[i] = FileUpload.getFileUploadedfromFilePart(request.getPart(paramName));
 
@@ -109,11 +111,11 @@ public class Mapping {
                     System.out.println("Parameter Utilisation...");
                 }
             }
-            else                                                            values[i] = (String) paramValue;
+            else                                                            throw new IllegalStateException("The type " + parameters[i].getType().getSimpleName() + " of the Attribute no." + (i + 1) + " " + paramName + " of the Method " + method.getName() + " of the Controller " + controller.getClass().getSimpleName() + " is not supported");
         }
     }
 
-    public void setModelParam(int i, Parameter[] parameters, Object[] values, HttpServletRequest request) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, ClassNotFoundException {
+    public void setModelParam(Object controller, Method method, int i, Parameter[] parameters, Object[] values, HttpServletRequest request) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, ClassNotFoundException {
         ModelAttribute attribute = parameters[i].getAnnotation(ModelAttribute.class);
         String modelName = null;
         if (attribute == null)                                              throw new IllegalArgumentException("There is no @ModelAttribute annotation on the model parmeter (parameter place : no." + (i + 1) + " )");
@@ -123,25 +125,35 @@ public class Mapping {
         Field[] fields = model.getClass().getDeclaredFields();
         for (int j = 0; j < fieldNames.length; j++) {
             String inputName = modelName + "." + fieldNames[j];
+
             String fieldValue = request.getParameter(inputName);
+            
             if (fieldValue == null) {
                 throw new NullPointerException("There is an undefined field (field name : " + inputName + ")");
-            } else { 
+            } else {
+                // Check the value of the field according to its annotation(s)
+                String error_message = Validator.check(fields[j], fieldValue);
+                if (error_message != null) {
+                    throw new IllegalArgumentException("Invalid value for field " + inputName + " : " + error_message);
+                }
+
                 if (fields[j].getType() == int.class)                       Reflect.invokeSetterMethod(model, fieldNames[j], int.class, Integer.valueOf(fieldValue));
                 else if (fields[j].getType() == double.class)               Reflect.invokeSetterMethod(model, fieldNames[j], double.class, Double.valueOf(fieldValue));
                 else if (fields[j].getType() == float.class)                Reflect.invokeSetterMethod(model, fieldNames[j], float.class, Float.valueOf(fieldValue));
-                else                                                        Reflect.invokeSetterMethod(model, fieldNames[j], String.class, fieldValue);
+                else if (fields[j].getType() == java.sql.Date.class)        Reflect.invokeSetterMethod(model, fieldNames[j], java.sql.Date.class, java.sql.Date.valueOf(fieldValue));
+                else if (fields[j].getType() == String.class)               Reflect.invokeSetterMethod(model, fieldNames[j], String.class, fieldValue);
+                else                                                        throw new IllegalStateException("The type " + fields[j].getType().getSimpleName() + " of the Field no." + (j + 1) + " " + fieldNames[j] + " of the Class " + parameters[i].getType().getSimpleName() + " of the Attribute no." + (i + 1) + " " + modelName + " of the Method " + method.getName() + " of the Controller " + controller.getClass().getSimpleName() + " is not supported");
             }
         }
         values[i] = model;
     }
 
-    public void configParam(Object controller, Parameter[] parameters, Object[] values, HttpServletRequest request) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, ClassNotFoundException, NullPointerException, IOException, ServletException {
+    public void configParam(Object controller, Method method, Parameter[] parameters, Object[] values, HttpServletRequest request) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, ClassNotFoundException, NullPointerException, IOException, ServletException {
         for (int i = 0; i < parameters.length; i++) {
             if (parameters[i].getType() == int.class || parameters[i].getType() == double.class || parameters[i].getType() == String.class || parameters[i].getType() == MySession.class || parameters[i].getType() == FileUpload.class) {
-                setSimpleParam(controller, i, parameters, values, request);
+                setSimpleParam(controller, method, i, parameters, values, request);
             } else {
-                setModelParam(i, parameters, values, request);
+                setModelParam(controller, method, i, parameters, values, request);
             }
         }
     }
@@ -152,7 +164,7 @@ public class Mapping {
         Parameter[] parameters = method.getParameters();
         if (parameters.length > 0) {
             Object[] values = new Object[parameters.length];
-            configParam(controller, parameters, values, request);
+            configParam(controller, method, parameters, values, request);
             return Reflect.invokeMethod(controller, action.getMethodName(), values);
         }
         return Reflect.invokeMethod(controller, action.getMethodName(), null);
