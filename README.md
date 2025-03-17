@@ -69,11 +69,23 @@ Modifying the method invokeMethod in Mapping by refractorizing it with configPar
 
 ## Sprint 12: Uploading files
 
-- Modifying `FrontControllerMethod.class` by modifying its method `findMethodsAnnoted` so that the `name` provided by the annotation AnnotationController of the controller will be concatenate with the `value` ot the annotation Url of each of its methods
-- Modifying `ModelView.class` by modifying its method `prepareModelView` by adding `../` before `url` when getting the RequestDispatcher to avoid that the framework will try to find the view in the AnnotationController name
-- Creating `FileUpload.class` to handle a file by containing its `name` and its contents (in the form of `byte`)
-- Modifying `FileUpload.class` by adding a static function `FileUpload getFileUploadedfromFilePart(Part filePart)` to handle the manipulation of the uploaded file
-- Modifying `FileUpload.class` by adding a function `String getFileType()` to have the type of the uploaded file
-- Modifying `FileUpload.class` by adding a function `String getContent()` to have the content of the uploaded file
-- Modifying `FileUpload.class` by adding a function `void saveTo(String uploadFolder)` to save the uploaded file
-- Modifying `Mapping.class` by modifying its function `void setSimpleParam(Object controller, int i, Parameter[] parameters, Object[] values, HttpServletRequest request)` to add an handler for `FileUpload` parameter when scanning and taking the `values` of the controller parameters
+- Modifying `FrontControllerMethod.java` by modifying its method `findMethodsAnnoted` so that the `name` provided by the annotation AnnotationController of the controller will be concatenate with the `value` ot the annotation Url of each of its methods
+- Modifying `ModelView.java` by modifying its method `prepareModelView` by adding `../` before `url` when getting the RequestDispatcher to avoid that the framework will try to find the view in the AnnotationController name
+- Creating `FileUpload.java` to handle a file by containing its `name` and its contents (in the form of `byte`)
+- Modifying `FileUpload.java` by adding a static function `FileUpload getFileUploadedfromFilePart(Part filePart)` to handle the manipulation of the uploaded file
+- Modifying `FileUpload.java` by adding a function `String getFileType()` to have the type of the uploaded file
+- Modifying `FileUpload.java` by adding a function `String getContent()` to have the content of the uploaded file
+- Modifying `FileUpload.java` by adding a function `void saveTo(String uploadFolder)` to save the uploaded file
+- Modifying `Mapping.java` by modifying its function `void setSimpleParam(Object controller, int i, Parameter[] parameters, Object[] values, HttpServletRequest request)` to add an handler for `FileUpload` parameter when scanning and taking the `values` of the controller parameters
+
+## Sprint 13: Data Validation
+
+- Modifying `Mappping.java` by modifying its functions `void setSimpleParam(Object controller, Method method, int i, Parameter[] parameters, Object[] values, HttpServletRequest request)` to add `Method method` in its attributes (needed in the message if there is an `IllegalStateException` thrown), and to improve the checking of the `type` (by adding `java.sql.Date` and `String`, because before it was directly considered as a String if it was not an `int`, a `double` or a `float`, and by throwing an `IllegalStateException` when the attribute type is not one of them) of each of the attributes of the controller method before assigning their value to each of them
+- Modifying `Mappping.java` by modifying its functions `void setModelParam(Object controller, Method method, int i, Parameter[] parameters, Object[] values, HttpServletRequest request)` to add `Object controller` and `Method method` in its attributes (needed in the message if there is an `IllegalStateException` thrown), and to improve the checking of the `type` (by adding `java.sql.Date` and `String`, because before it was directly considered as a String if it was not an `int`, a `double` or a `float`, and by throwing an `IllegalStateException` when the field type is not one of them) of each of the fields of the object before assigning their value to each of them
+- Modifying `Mapping.java` by modifying its functions `void configParam(Object controller, Method method, Parameter[] parameters, Object[] values, HttpServletRequest request)` to add `Object controller` and `Method method` in its attributes (needed in the message if there is an `IllegalStateException` thrown by `setSimpleParam` or `setModelParam`)
+- Creating `NotNull.java` to indicate that the field must `not be null`
+- Creating `Email.java` to indicate that the field must be an `email` address
+- Creating `Range.java` to indicate that the value of the field must `between 2 numbers` or `upper/lower` than a number
+- Creating `Length.java` to indicate that the `number of the characters` of the field must be smaller than or equal to a number
+- Creating `Validator.java` to check that the value of the field is `according to each` of its annotation(s) especially with the functions `static String check(Field field, String value)` where we use its 4 other functions `static String notNullCheck(Field field, String value)`, `static String emailCheck(Field field, String value)`, `static String rangeCheck(Field field, String value)`, and `static String lengthCheck(Field field, String value)`
+- Modifying `Mapping.java` by modifying its functions `void setModelParam(Object controller, Method method, int i, Parameter[] parameters, Object[] values, HttpServletRequest request)` to use the function of the Class `Validator` `static String check(Field field, String value)`
