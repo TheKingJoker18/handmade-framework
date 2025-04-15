@@ -23,8 +23,8 @@ public class MyException extends Exception {
         this.setErrorCode(error_code);
         this.setMessage(message);
     }
-    public MyException(int error_code, Exception exception) {
-        super(exception);
+    public MyException(int error_code, Exception exception_cause) {
+        super(exception_cause);
         this.setErrorCode(error_code);
     }
 }
