@@ -124,7 +124,7 @@ public class FrontControllerMethod {
 
         } else {
             if (relativeURI.compareTo("/") != 0) {
-                throw new MyException(404, "The URL is not associated with an method");
+                throw new MyException(404, "The URL is not associated with an method... The actual url: " + request.getRequestURI());
             }
         }
 

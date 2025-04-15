@@ -8,6 +8,7 @@ import java.lang.reflect.Parameter;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -21,6 +22,7 @@ public class Mapping {
     private String className;
     private Set<VerbAction> ls_verbAction;
     private VerbAction action;
+    private FormValidation formValidation;
 
     public String getClassName() {
         return className;
@@ -48,16 +50,27 @@ public class Mapping {
         this.action = action;
     }
 
-    public Mapping() {}
+    public FormValidation getFormValidation() {
+        return this.formValidation;
+    }
+    public void setFormValidation(FormValidation formValidation) {
+        this.formValidation = formValidation;
+    }
+
+    public Mapping() {
+        this.setFormValidation(new FormValidation());
+    }
     public Mapping(String className, Set<VerbAction> ls_verbAction) {
         this.setClassName(className);
         this.setLs_verbAction(ls_verbAction);
+        this.setFormValidation(new FormValidation());
     }
     public Mapping(String className, String methodName, String verb) {
         this.setClassName(className);
         Set<VerbAction> ls_verbAction = new HashSet<VerbAction>();
         ls_verbAction.add(new VerbAction(methodName, verb));
         this.setLs_verbAction(ls_verbAction);
+        this.setFormValidation(new FormValidation());
     }
 
     @Override
@@ -113,9 +126,12 @@ public class Mapping {
             }
             else                                                            throw new IllegalStateException("The type " + parameters[i].getType().getSimpleName() + " of the Attribute no." + (i + 1) + " " + paramName + " of the Method " + method.getName() + " of the Controller " + controller.getClass().getSimpleName() + " is not supported");
         }
+
+        // Adding the value of the parameter in the formValidation in case of error in other field like in setModelParam
+        formValidation.addError(paramName, null, paramValue);
     }
 
-    public void setModelParam(Object controller, Method method, int i, Parameter[] parameters, Object[] values, HttpServletRequest request) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, ClassNotFoundException {
+    public void setModelParam(Object controller, Method method, int i, Parameter[] parameters, Object[] values, HttpServletRequest request) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, ClassNotFoundException, ServletException, IOException {
         ModelAttribute attribute = parameters[i].getAnnotation(ModelAttribute.class);
         String modelName = null;
         if (attribute == null)                                              throw new IllegalArgumentException("There is no @ModelAttribute annotation on the model parmeter (parameter place : no." + (i + 1) + " )");
@@ -123,6 +139,7 @@ public class Mapping {
         Object model = Reflect.invokeEmptyConstructor(parameters[i].getType().getName());
         String[] fieldNames = Reflect.getFieldsNames(model);
         Field[] fields = model.getClass().getDeclaredFields();
+
         for (int j = 0; j < fieldNames.length; j++) {
             String inputName = modelName + "." + fieldNames[j];
 
@@ -134,7 +151,16 @@ public class Mapping {
                 // Check the value of the field according to its annotation(s)
                 String error_message = Validator.check(fields[j], fieldValue);
                 if (error_message != null) {
-                    throw new IllegalArgumentException("Invalid value for field " + inputName + " : " + error_message);
+                    // Sprint 13
+                    // throw new IllegalArgumentException("Invalid value for field " + inputName + " : " + error_message);
+
+                    // Sprint 14
+                    // Add the error message and the old value in the FormValidation
+                    formValidation.addError(inputName, error_message, fieldValue);
+
+                // if the Parameter is okay, adding its value in the formValidation in case of error in other field
+                } else {
+                    formValidation.addError(inputName, null, fieldValue);
                 }
 
                 if (fields[j].getType() == int.class)                       Reflect.invokeSetterMethod(model, fieldNames[j], int.class, Integer.valueOf(fieldValue));
@@ -145,10 +171,11 @@ public class Mapping {
                 else                                                        throw new IllegalStateException("The type " + fields[j].getType().getSimpleName() + " of the Field no." + (j + 1) + " " + fieldNames[j] + " of the Class " + parameters[i].getType().getSimpleName() + " of the Attribute no." + (i + 1) + " " + modelName + " of the Method " + method.getName() + " of the Controller " + controller.getClass().getSimpleName() + " is not supported");
             }
         }
+
         values[i] = model;
     }
 
-    public void configParam(Object controller, Method method, Parameter[] parameters, Object[] values, HttpServletRequest request) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, ClassNotFoundException, NullPointerException, IOException, ServletException {
+    public void configParam(Object controller, Method method, Parameter[] parameters, Object[] values, HttpServletRequest request, HttpServletResponse response) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, ClassNotFoundException, NullPointerException, IOException, ServletException {
         for (int i = 0; i < parameters.length; i++) {
             if (parameters[i].getType() == int.class || parameters[i].getType() == double.class || parameters[i].getType() == String.class || parameters[i].getType() == MySession.class || parameters[i].getType() == FileUpload.class) {
                 setSimpleParam(controller, method, i, parameters, values, request);
@@ -156,15 +183,31 @@ public class Mapping {
                 setModelParam(controller, method, i, parameters, values, request);
             }
         }
+
+        // Verifying if there is any error
+        // if (!value_controller.isEmpty()) {
+        if (formValidation.hasErrors()) {
+            // Sprint 13
+            // throw new IllegalArgumentException("Invalid values for the fields : " + formValidation.toString());
+
+            // Sprint 14
+            request.setAttribute("formValidation", formValidation);
+            
+            String form_url = request.getParameter("form_url");
+            System.out.println("form_url = " + form_url);
+
+            RequestDispatcher dispatcher = request.getRequestDispatcher(form_url);
+            dispatcher.forward(request, response);
+        }
     }
 
-    public Object invokeMethod(HttpServletRequest request) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, ClassNotFoundException, NullPointerException, IOException, ServletException {
+    public Object invokeMethod(HttpServletRequest request, HttpServletResponse response) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, ClassNotFoundException, NullPointerException, IOException, ServletException {
         Object controller = Reflect.invokeControllerConstructor(this.getClassName(), request);
         Method method = Reflect.getMethodByName(controller, action.getMethodName());
         Parameter[] parameters = method.getParameters();
         if (parameters.length > 0) {
             Object[] values = new Object[parameters.length];
-            configParam(controller, method, parameters, values, request);
+            configParam(controller, method, parameters, values, request, response);
             return Reflect.invokeMethod(controller, action.getMethodName(), values);
         }
         return Reflect.invokeMethod(controller, action.getMethodName(), null);
@@ -185,14 +228,19 @@ public class Mapping {
         print += "<h2> Listes des Controllers trouves: </h2>";
         print += "<p>Class: " + this.getClassName() + "</p>";
         print += "<p>Method: " + action.getMethodName() + "</p>";
-        Object result = this.invokeMethod(request);
+        Object result = this.invokeMethod(request, response);
         print += "<p>---------------------------------------------------------------</p>";
         if (result instanceof String) {
             print += "<p>Result: " + (String) result + "</p>";
                 
         } else if (result instanceof ModelView) {
-            ModelView mv = (ModelView)result;
-            mv.prepareModelView(request, response);
+            if (formValidation.hasErrors()) {
+                // Reducing the dispatcher.forward to once each time if there is some error(s) to avoid multiple forward
+                return "";
+            } else {
+                ModelView mv = (ModelView)result;
+                mv.prepareModelView(request, response);
+            }
 
         } else {
             throw new ServletException("The returned object Class is not known");
@@ -203,7 +251,7 @@ public class Mapping {
 
     public String execute_json(HttpServletRequest request, HttpServletResponse response) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, ClassNotFoundException, ServletException, NullPointerException, IOException {
         String json = "data: ";
-        Object result = this.invokeMethod(request);
+        Object result = this.invokeMethod(request, response);
         if (result instanceof String) {
             json += "{\"string\":\"" + (String) result + "\"}";
                 

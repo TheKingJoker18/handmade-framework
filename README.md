@@ -89,3 +89,14 @@ Modifying the method invokeMethod in Mapping by refractorizing it with configPar
 - Creating `Length.java` to indicate that the `number of the characters` of the field must be smaller than or equal to a number
 - Creating `Validator.java` to check that the value of the field is `according to each` of its annotation(s) especially with the functions `static String check(Field field, String value)` where we use its 4 other functions `static String notNullCheck(Field field, String value)`, `static String emailCheck(Field field, String value)`, `static String rangeCheck(Field field, String value)`, and `static String lengthCheck(Field field, String value)`
 - Modifying `Mapping.java` by modifying its functions `void setModelParam(Object controller, Method method, int i, Parameter[] parameters, Object[] values, HttpServletRequest request)` to use the function of the Class `Validator` `static String check(Field field, String value)`
+
+## Sprint 14: Data Validation (Continuation)
+
+- Modifying `MyException.java` by adding a Contructor `MyException(int error_code, Exception exception_cause)` to specify the exception that causes the error, but not just the error message
+- Creating `MessageValue.java` to add the Error `Message` and the `Old` Value of the Input of a Form of a Field of an Object if there is some `error`
+- Creating `FormValidation.java` to manage the validation of a form with a list of error `messages` and old `values` according to each parameters of the form by its field `HashMap<String, MessageValue> errors`
+- Modifying `Mapping.java` by adding a `FormValidation` in its fields to manage form validations with its setter and getter methods
+- Modifying `Mapping.java` by adding `HttpServletResponse response` as attribute of its methods `configParam` and `invokeMethod` so that it can use `dispatcher.forward` when there is some error(s) when submitting a form
+- Modifying `Mapping.java` by adding a way to add the submitted values in case of some errors in `void setSimpleParam(Object controller, Method method, int i, Parameter[] parameters, Object[] values, HttpServletRequest request)` and in `void setModelParam(Object controller, Method method, int i, Parameter[] parameters, Object[] values, HttpServletRequest request)`, and instead of throwing an IllegalArgumentException when there are errors in `setModelParam` adding its messages in formValidation
+- Modifying `Mapping.java` by adding a way to resend the user to the form in `void configParam(Object controller, Method method, Parameter[] parameters, Object[] values, HttpServletRequest request, HttpServletResponse response)` when the formValidation has some error(s) with the submitted values
+- Modifying `Mapping.java` by adding `return ""` in `String execute_html(HttpServletRequest request, HttpServletResponse response)` to avoid a multiple dispatcher.forward
