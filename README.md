@@ -1,115 +1,170 @@
-### handmade_framework
+# Handmade Framework
 
-ETU002556 RANAIVOSON NY Hoavisoa Misandratra
+**Author**: RANAIVOSON NY Hoavisoa Misandratra (ETU002556)
 
-`Warning: In case there is an error in the compilation of the classes, please delete the duplicated classes that do not match if the package`
+A lightweight Java-based web framework designed to handle servlet-based applications with custom annotations, file uploads, data validation, and authentication management.
 
-Historics of the pull requests:
+---
 
-## Sprint 0: FrontController.java and compilate.bat upload
+## Table of Contents
+- [Overview](#overview)
+- [Requirements](#requirements)
+- [Features](#features)
+- [Project Timeline (Sprints)](#project-timeline-sprints)
+- [Setup Instructions](#setup-instructions)
+- [Usage Notes](#usage-notes)
+- [Contributing](#contributing)
 
-## Sprint 1
+---
 
-AnnotationController.java, ControllerScanner.java, FrontController.java and compilate.bat upload
+## Overview
+The Handmade Framework is a custom-built Java web framework that simplifies the development of servlet-based applications. It provides features like custom annotations for routing, file uploads, form validation, and authentication/authorization management. The framework is designed to be extensible and easy to integrate into servlet-compatible servers.
 
-## Sprint 2
+**Note**: If compilation errors occur due to duplicated classes, ensure that only the correct classes matching the package structure are retained.
 
-- Regroupement des annotations dans le package annotation Modification de FrontController
-- Ajout de Mapping.java dans le package utils
+---
 
-## Sprint 3: Adding Refflect.java and a new function in FrontController
+## Requirements
+To use the Handmade Framework, you need:
+- **Java**: Version 8 or higher
+- **Servlet-Compatible Server**: A server capable of running servlet applications (e.g., Apache Tomcat, Jetty)
+- **Dependencies**: Gson library for JSON serialization (included in Sprint 9)
 
-The new funciton is Object invokeMappedMethod(Mapping mapping)
+---
 
-## Sprint 4: Adding ModelView.java and a verification ...
+## Features
+- **Custom Annotations**: Define controllers, routes, parameters, and authentication with annotations like `@Url`, `@Get`, `@Post`, `@Restapi`, `@Param`, `@ModelAttribute`, `@Authentified`, and `@Role`.
+- **File Upload Handling**: Upload and manage files with the `FileUpload` class.
+- **Data Validation**: Validate form inputs using annotations like `@NotNull`, `@Email`, `@Range`, and `@Length`.
+- **Authentication & Authorization**: Secure methods and classes with `@Authentified` and `@Role` annotations.
+- **REST API Support**: Handle JSON responses with `@Restapi` annotation.
+- **Session Management**: Use `MySession` for session-based operations.
+- **Error Handling**: Custom exceptions with `MyException` for detailed error reporting.
 
-for the returned value in processRequest of FrontController.java to verify its Class
+---
 
-## Sprint 5: Modification in FrontController.java
+## Project Timeline (Sprints)
 
-Adding checks errors for the package scan and the Mappings with same url in build, and for the returned object class and the unknown url in request
+### Sprint 0: Initial Setup
+- Uploaded `FrontController.java` and `compilate.bat`.
 
-## Sprint 6: Adding annotation Param
+### Sprint 1: Core Controller Logic
+- Added `AnnotationController.java`, `ControllerScanner.java`, and updated `FrontController.java`.
 
-Modifying Reflect.java (adding method getMethodByName) and Mapping.java (modifying method invokeMethod)
+### Sprint 2: Annotation Organization
+- Grouped annotations in the `annotation` package.
+- Added `Mapping.java` to the `utils` package.
+- Modified `FrontController.java`.
 
-## Sprint 6: Modification on Mapping.java
+### Sprint 3: Reflection Enhancements
+- Added `Refflect.java`.
+- Introduced `invokeMappedMethod` in `FrontController.java`.
 
-Modifying the method invokeMethod so that when there is no annotation @param on the parameter of the method, it takes directly the parameter name and adding an exception when the value of the parameter is null
+### Sprint 4: Model-View Support
+- Added `ModelView.java`.
+- Enhanced `processRequest` in `FrontController.java` to verify return types.
 
-## Sprint 7: Adding ModelAttribute and ModelField annotations
+### Sprint 5: Error Handling
+- Improved `FrontController.java` with package scanning and URL mapping checks.
 
-Modifying the method invokeMethod in Mapping by refractorizing it with configParam, setSimpleParam, and setModelParam
+### Sprint 6: Parameter Annotations
+- Added `@Param` annotation.
+- Modified `Reflect.java` (added `getMethodByName`).
+- Updated `Mapping.java` to handle parameters without `@Param` and null value exceptions.
 
-## Sprint 8: Adding a new class MySession.java
+### Sprint 7: Model Annotations
+- Added `@ModelAttribute` and `@ModelField` annotations.
+- Refactored `invokeMethod` in `Mapping.java` with `configParam`, `setSimpleParam`, and `setModelParam`.
 
-- Modifying Reflect.java by adding the following method: checkFieldByType (to check if the object have the specified Type in its fields), getFieldValueByType, invokeGetterMethod and invokeControllerConstructor
-- Modifying Mapping.java by modifying some of its method like invokeMethod, configParam, and setSimpleParam
+### Sprint 8: Session Management
+- Added `MySession.java`.
+- Enhanced `Reflect.java` with methods: `checkFieldByType`, `getFieldValueByType`, `invokeGetterMethod`, and `invokeControllerConstructor`.
+- Updated `Mapping.java` methods: `invokeMethod`, `configParam`, and `setSimpleParam`.
 
-## Sprint 9: Adding a new annotation Restapi.java
+### Sprint 9: REST API Support
+- Added `@Restapi` annotation.
+- Modified `Mapping.java` to support JSON responses with `checkIfMethodHaveRestapiAnnotation` and split `execute` into `execute_html` and `execute_json`.
+- Updated `ModelView.java` with `toJson()` using Gson.
+- Enhanced `FrontController.java` with `executeControllerMethod`.
 
-- Modifying Mapping.java by creating a new method "boolean checkIfMethodHaveRestapiAnnotation(HttpServletRequest request)", and separating the method "execute" in 2 parts: "execute_html" to execute the method without the annotation @Restapi and execute_json to execute the method when it has an annotation @Restapi
-- Modifying ModelView.java by creating a new method "String toJson()" to have the json form of the ModelView by using the library Gson
-- Modifying FrontController.java by creating a function "public String executeControllerMethod(Mapping mapping, HttpServletRequest request, HttpServletResponse response, String relativeURI)" to check if the method associated with the relativeURI has an annotation @Restapi, and to execute it and to define the response.contentType according to that
+### Sprint 10: HTTP Verb Annotations
+- Renamed `Get.java` to `Url.java`.
+- Added `@Get` and `@Post` annotations for HTTP verb specification.
+- Updated `Mapping.java` with `verb` field and modified `toString()`.
+- Modified `FrontController.java` to validate HTTP verbs.
 
-## Sprint 10: Adding new annotations Get.java and Post.java
+### Sprint 11: Exception and Method Refactoring
+- Created `VerbAction.java` for verb-method mapping.
+- Replaced `Mapping.java` fields with `Set<VerbAction> ls_verbAction` and `VerbAction action`.
+- Added `MyException.java` for custom error codes.
+- Created `FrontControllerMethod.java` to separate method-related logic from `FrontController.java`.
+- Updated `FrontController.java` with exception handling for `doGet` and `doPost`.
 
-- Modifying Get.java by changing its name to "Url.java" but keeping the field String value
-- Creating two annotations @Get and @Post to help the users to precise the VERB (method) that they are going to use
-- Modifying Mapping.java by adding a new field String verb to precise the VERB (method) defined by the user and modifying its method "String toString()" to show the said VERB
-- Modifying FrontController.java by modifying its method "String executeControllerMethod(Mapping mapping, HttpServletRequest request, HttpServletResponse response, String relativeURI)" to check if the VERB used by the user matches with the VERB precised by the annotation @Get or @Post above the called method before executing the mapping, otherwise it throws an exception
+### Sprint 12: File Uploads
+- Modified `FrontControllerMethod.java` to concatenate controller and URL annotations.
+- Updated `ModelView.java` to handle view dispatching.
+- Added `FileUpload.java` for file handling with methods: `getFileUploadedfromFilePart`, `getFileType`, `getContent`, and `saveTo`.
+- Updated `Mapping.java` to handle `FileUpload` parameters.
 
-## Modified Sprint 10 and Sprint 11: Creating MyException.java
+### Sprint 13: Data Validation
+- Enhanced `Mapping.java` to validate parameter types (`java.sql.Date`, `String`) and throw `IllegalStateException` for unsupported types.
+- Added validation annotations: `@NotNull`, `@Email`, `@Range`, `@Length`.
+- Created `Validator.java` for field validation with methods: `check`, `notNullCheck`, `emailCheck`, `rangeCheck`, and `lengthCheck`.
+- Updated `Mapping.java` to use `Validator` in `setModelParam`.
 
-- Creating "VerbAction.java" to put in it the method name and the verb mentioned in the user controller
-- Modifying "Mapping.java" by replacing its fields String methodName and String verb with Set<VerbAction> ls_verbAction and VerbAction action where ls_verbAction is the list of methods related to the verbs and the url, and action is the used method for the current verb and url
-- Creating "MyException.java" with the fields int error_code and String message to let the user add an error code for his thrown exception
-- Creating "FrontControllerMethod.java" to separate the methods "void findMethodsAnnoted(Class<?> clazz, FrontController frontController)", "void initMethodList(FrontController frontController)", "String printMethodList(FrontController frontController)" and "String executeControllerMethod(Mapping mapping, HttpServletRequest request, HttpServletResponse response, String relativeURI, FrontController frontController)" from the class "FrontController.java"
-- Modifying "FrontController.java" by moving the other methods except "void init(ServletConfig config) throws ServletException", "String processRequest(HttpServletRequest request, HttpServletResponse response)", "void doGet(HttpServletRequest req, HttpServletResponse res)" and "void doPost(HttpServletRequest req, HttpServletResponse res)", and adding an instance check for the Exception in catch (Exception e) of "doGet" and "doPost" in order to print the error code
+### Sprint 14: Form Validation
+- Added constructor to `MyException.java` for exception causes.
+- Created `MessageValue.java` and `FormValidation.java` for form error management.
+- Updated `Mapping.java` to handle form validation errors, resend users to forms, and avoid multiple forwards.
 
-## Sprint 12: Uploading files
+### Sprint 15: Method-Level Authentication
+- Added `@Authentified` and `@Role` annotations for method-level security.
+- Modified `Mapping.java` with `verifyMethodPermission` to check authentication and roles.
 
-- Modifying `FrontControllerMethod.java` by modifying its method `findMethodsAnnoted` so that the `name` provided by the annotation AnnotationController of the controller will be concatenate with the `value` ot the annotation Url of each of its methods
-- Modifying `ModelView.java` by modifying its method `prepareModelView` by adding `../` before `url` when getting the RequestDispatcher to avoid that the framework will try to find the view in the AnnotationController name
-- Creating `FileUpload.java` to handle a file by containing its `name` and its contents (in the form of `byte`)
-- Modifying `FileUpload.java` by adding a static function `FileUpload getFileUploadedfromFilePart(Part filePart)` to handle the manipulation of the uploaded file
-- Modifying `FileUpload.java` by adding a function `String getFileType()` to have the type of the uploaded file
-- Modifying `FileUpload.java` by adding a function `String getContent()` to have the content of the uploaded file
-- Modifying `FileUpload.java` by adding a function `void saveTo(String uploadFolder)` to save the uploaded file
-- Modifying `Mapping.java` by modifying its function `void setSimpleParam(Object controller, int i, Parameter[] parameters, Object[] values, HttpServletRequest request)` to add an handler for `FileUpload` parameter when scanning and taking the `values` of the controller parameters
+### Sprint 16: Class-Level Authentication
+- Modified `@Authentified` and `@Role` to support class-level annotations.
+- Added `verifyClassPermission` in `Mapping.java` for class-level security checks.
 
-## Sprint 13: Data Validation
+---
 
-- Modifying `Mappping.java` by modifying its functions `void setSimpleParam(Object controller, Method method, int i, Parameter[] parameters, Object[] values, HttpServletRequest request)` to add `Method method` in its attributes (needed in the message if there is an `IllegalStateException` thrown), and to improve the checking of the `type` (by adding `java.sql.Date` and `String`, because before it was directly considered as a String if it was not an `int`, a `double` or a `float`, and by throwing an `IllegalStateException` when the attribute type is not one of them) of each of the attributes of the controller method before assigning their value to each of them
-- Modifying `Mappping.java` by modifying its functions `void setModelParam(Object controller, Method method, int i, Parameter[] parameters, Object[] values, HttpServletRequest request)` to add `Object controller` and `Method method` in its attributes (needed in the message if there is an `IllegalStateException` thrown), and to improve the checking of the `type` (by adding `java.sql.Date` and `String`, because before it was directly considered as a String if it was not an `int`, a `double` or a `float`, and by throwing an `IllegalStateException` when the field type is not one of them) of each of the fields of the object before assigning their value to each of them
-- Modifying `Mapping.java` by modifying its functions `void configParam(Object controller, Method method, Parameter[] parameters, Object[] values, HttpServletRequest request)` to add `Object controller` and `Method method` in its attributes (needed in the message if there is an `IllegalStateException` thrown by `setSimpleParam` or `setModelParam`)
-- Creating `NotNull.java` to indicate that the field must `not be null`
-- Creating `Email.java` to indicate that the field must be an `email` address
-- Creating `Range.java` to indicate that the value of the field must `between 2 numbers` or `upper/lower` than a number
-- Creating `Length.java` to indicate that the `number of the characters` of the field must be smaller than or equal to a number
-- Creating `Validator.java` to check that the value of the field is `according to each` of its annotation(s) especially with the functions `static String check(Field field, String value)` where we use its 4 other functions `static String notNullCheck(Field field, String value)`, `static String emailCheck(Field field, String value)`, `static String rangeCheck(Field field, String value)`, and `static String lengthCheck(Field field, String value)`
-- Modifying `Mapping.java` by modifying its functions `void setModelParam(Object controller, Method method, int i, Parameter[] parameters, Object[] values, HttpServletRequest request)` to use the function of the Class `Validator` `static String check(Field field, String value)`
+## Setup Instructions
+1. **Clone the Repository**:
+   ```bash
+   git clone <repository-url>
+   ```
+2. **Install Java 8+**:
+   Ensure Java 8 or higher is installed.
+3. **Set Up a Servlet-Compatible Server**:
+   Deploy the application on a server like Apache Tomcat.
+4. **Add Dependencies**:
+   Include the Gson library for JSON support (used in Sprint 9).
+5. **Compile the Application**:
+   Use the provided `compilate.bat` script or compile manually with:
+   ```bash
+   javac -cp .;<path-to-servlet-api>;<path-to-gson> *.java
+   ```
+6. **Deploy and Run**:
+   Deploy the compiled application to your servlet container and access it via the configured URL.
 
-## Sprint 14: Data Validation (Continuation)
+---
 
-- Modifying `MyException.java` by adding a Contructor `MyException(int error_code, Exception exception_cause)` to specify the exception that causes the error, but not just the error message
-- Creating `MessageValue.java` to add the Error `Message` and the `Old` Value of the Input of a Form of a Field of an Object if there is some `error`
-- Creating `FormValidation.java` to manage the validation of a form with a list of error `messages` and old `values` according to each parameters of the form by its field `HashMap<String, MessageValue> errors`
-- Modifying `Mapping.java` by adding a `FormValidation` in its fields to manage form validations with its setter and getter methods
-- Modifying `Mapping.java` by adding `HttpServletResponse response` as attribute of its methods `configParam` and `invokeMethod` so that it can use `dispatcher.forward` when there is some error(s) when submitting a form
-- Modifying `Mapping.java` by adding a way to add the submitted values in case of some errors in `void setSimpleParam(Object controller, Method method, int i, Parameter[] parameters, Object[] values, HttpServletRequest request)` and in `void setModelParam(Object controller, Method method, int i, Parameter[] parameters, Object[] values, HttpServletRequest request)`, and instead of throwing an IllegalArgumentException when there are errors in `setModelParam` adding its messages in formValidation
-- Modifying `Mapping.java` by adding a way to resend the user to the form in `void configParam(Object controller, Method method, Parameter[] parameters, Object[] values, HttpServletRequest request, HttpServletResponse response)` when the formValidation has some error(s) with the submitted values
-- Modifying `Mapping.java` by adding `return ""` in `String execute_html(HttpServletRequest request, HttpServletResponse response)` to avoid a multiple dispatcher.forward
+## Usage Notes
+- **Compilation Errors**: If you encounter duplicate class errors, remove any conflicting classes that do not match the package structure.
+- **Annotations**: Use `@Url`, `@Get`, `@Post`, and `@Restapi` to define routes and HTTP methods.
+- **Validation**: Apply `@NotNull`, `@Email`, `@Range`, and `@Length` to enforce data constraints.
+- **File Uploads**: Use `FileUpload` for handling file uploads in controller methods.
+- **Authentication**: Secure methods or classes with `@Authentified` and `@Role`.
 
-## Sprint 15: (Method) Authentification Management
+---
 
-- Creating `Authentified.java` to specify that the invocation of the method needs an `authenfied user` and to specify the `name` of the attribute of the session where the `user informations` are stored
-- Creating `Role.java` to specify the authorized role(s) that can use the method and to specify the `name` of the attribute of the session where the `user role` is stored
-- Modifying `Mapping.java` by creating a function `void verifyMethodPermission(Method method, HttpServletRequest request)` to check if there is an `authentified user` when the method has an `Authentified` annotation and to check if the role(s) indicated in the `Role` annotation suit(s) with the `user role` when the method has a `Role` annotation before using it
-- Modifying `Mapping.java` by modifying its function `Object invokeMethod(HttpServletRequest request, HttpServletResponse response)` to use `verifyMethodPermission` before configuring its parameters
+## Contributing
+Contributions are welcome! Please follow these steps:
+1. Fork the repository.
+2. Create a new branch (`git checkout -b feature-branch`).
+3. Make your changes and commit (`git commit -m 'Add feature'`).
+4. Push to the branch (`git push origin feature-branch`).
+5. Open a pull request.
 
-## Sprint 16: (Class) Authentification Management
+For bug reports or feature requests, please open an issue.
 
-- Modifying `Authentified.java` and `Role.java` by removing their annotation `@Target(ElementType.METHOD)` so that they can be added to a `class`
-- Modifying `Mapping.java` by creating a function `void verifyClassPermission(Object controller, HttpServletRequest request)` to check if there is an `authentified user` when the controller has an `Authentified` annotation and to check if the role(s) indicated in the `Role` annotation suit(s) with the `user role` when the controller has a `Role` annotation before using it
-- Modifying `Mapping.java` by modifying its function `Object invokeMethod(HttpServletRequest request, HttpServletResponse response)` to use `verifyClassPermission` before configuring its method
+---
