@@ -105,5 +105,11 @@ Modifying the method invokeMethod in Mapping by refractorizing it with configPar
 
 - Creating `Authentified.java` to specify that the invocation of the method needs an `authenfied user` and to specify the `name` of the attribute of the session where the `user informations` are stored
 - Creating `Role.java` to specify the authorized role(s) that can use the method and to specify the `name` of the attribute of the session where the `user role` is stored
-- Modifying `Mapping.java` by creating a function `void verifyMethodPermission(Method method, HttpServletRequest request)` to check if there is an `authentified user` when the method has an `Authentified` annotation and to check if the role(s) indicated in the `Role` annotation suit(s) with the `user role` when the method has a `Role` annotation
+- Modifying `Mapping.java` by creating a function `void verifyMethodPermission(Method method, HttpServletRequest request)` to check if there is an `authentified user` when the method has an `Authentified` annotation and to check if the role(s) indicated in the `Role` annotation suit(s) with the `user role` when the method has a `Role` annotation before using it
 - Modifying `Mapping.java` by modifying its function `Object invokeMethod(HttpServletRequest request, HttpServletResponse response)` to use `verifyMethodPermission` before configuring its parameters
+
+## Sprint 16: (Class) Authentification Management
+
+- Modifying `Authentified.java` and `Role.java` by removing their annotation `@Target(ElementType.METHOD)` so that they can be added to a `class`
+- Modifying `Mapping.java` by creating a function `void verifyClassPermission(Object controller, HttpServletRequest request)` to check if there is an `authentified user` when the controller has an `Authentified` annotation and to check if the role(s) indicated in the `Role` annotation suit(s) with the `user role` when the controller has a `Role` annotation before using it
+- Modifying `Mapping.java` by modifying its function `Object invokeMethod(HttpServletRequest request, HttpServletResponse response)` to use `verifyClassPermission` before configuring its method
