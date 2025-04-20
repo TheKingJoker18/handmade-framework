@@ -243,8 +243,50 @@ public class Mapping {
         }
     }
 
+    public void verifyClassPermission(Object controller, HttpServletRequest request) throws AuthenticationException, RoleNotFoundException {
+        Class<?> clazz = controller.getClass();
+        Authentified authentified = clazz.getAnnotation(Authentified.class);
+        Role role = clazz.getAnnotation(Role.class);
+
+        // Verify authentification
+        if (authentified != null) {
+            MySession mySession = new MySession(request.getSession());
+            if (mySession.get(authentified.session_name()) == null) {
+                throw new AuthenticationException("There is no connected user");
+            }
+
+            // Verify role
+            if (role != null) {
+                if (mySession.get(role.session_name()) == null) {
+                    throw new RoleNotFoundException("The user has no role");
+                
+                } else {
+                    String user_role = (String) mySession.get(role.session_name());
+                    String[] authorized_roles = role.authorized_roles();
+                    boolean check = false;
+                    for (int i = 0; i < authorized_roles.length; i++) {
+                        if (user_role.compareTo(authorized_roles[i]) == 0) {
+                            check = true;
+                            break;
+                        }
+                    }
+
+                    if (!check) {
+                        throw new RoleNotFoundException("The user role doesn't match with any required role(s)... The actual user role is \"" + user_role + "\"");
+                    }
+                }
+            }
+
+        } else if (authentified == null && role != null) {
+            throw new AuthenticationException("The controller " + clazz.getSimpleName() + " has an annotation Role but no annotation Authentified");
+        }
+    }
+
     public Object invokeMethod(HttpServletRequest request, HttpServletResponse response) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, ClassNotFoundException, NullPointerException, IOException, ServletException, AuthenticationException, RoleNotFoundException {
         Object controller = Reflect.invokeControllerConstructor(this.getClassName(), request);
+        // Check if the controller has an Authentified and a Role annotations
+        verifyClassPermission(controller, request);
+
         Method method = Reflect.getMethodByName(controller, action.getMethodName());
         // Check if the method has an Authentified and a Role annotations
         verifyMethodPermission(method, request);
