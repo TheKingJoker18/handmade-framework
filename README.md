@@ -100,3 +100,10 @@ Modifying the method invokeMethod in Mapping by refractorizing it with configPar
 - Modifying `Mapping.java` by adding a way to add the submitted values in case of some errors in `void setSimpleParam(Object controller, Method method, int i, Parameter[] parameters, Object[] values, HttpServletRequest request)` and in `void setModelParam(Object controller, Method method, int i, Parameter[] parameters, Object[] values, HttpServletRequest request)`, and instead of throwing an IllegalArgumentException when there are errors in `setModelParam` adding its messages in formValidation
 - Modifying `Mapping.java` by adding a way to resend the user to the form in `void configParam(Object controller, Method method, Parameter[] parameters, Object[] values, HttpServletRequest request, HttpServletResponse response)` when the formValidation has some error(s) with the submitted values
 - Modifying `Mapping.java` by adding `return ""` in `String execute_html(HttpServletRequest request, HttpServletResponse response)` to avoid a multiple dispatcher.forward
+
+## Sprint 15: (Method) Authentification Management
+
+- Creating `Authentified.java` to specify that the invocation of the method needs an `authenfied user` and to specify the `name` of the attribute of the session where the `user informations` are stored
+- Creating `Role.java` to specify the authorized role(s) that can use the method and to specify the `name` of the attribute of the session where the `user role` is stored
+- Modifying `Mapping.java` by creating a function `void verifyMethodPermission(Method method, HttpServletRequest request)` to check if there is an `authentified user` when the method has an `Authentified` annotation and to check if the role(s) indicated in the `Role` annotation suit(s) with the `user role` when the method has a `Role` annotation
+- Modifying `Mapping.java` by modifying its function `Object invokeMethod(HttpServletRequest request, HttpServletResponse response)` to use `verifyMethodPermission` before configuring its parameters
