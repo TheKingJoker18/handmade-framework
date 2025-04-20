@@ -5,6 +5,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.List;
 
+import javax.management.relation.RoleNotFoundException;
+import javax.naming.AuthenticationException;
 import javax.servlet.*;
 import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.http.*;
@@ -78,7 +80,7 @@ public class FrontController extends HttpServlet {
         }
     }
 
-    public String processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, InstantiationException, ClassNotFoundException, MyException {
+    public String processRequest(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, InstantiationException, ClassNotFoundException, MyException, AuthenticationException, NullPointerException, RoleNotFoundException {
         String print = "";
 
         // Get the context path and request URI

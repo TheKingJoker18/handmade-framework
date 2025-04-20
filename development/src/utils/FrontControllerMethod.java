@@ -6,6 +6,8 @@ import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.List;
 
+import javax.management.relation.RoleNotFoundException;
+import javax.naming.AuthenticationException;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -81,13 +83,13 @@ public class FrontControllerMethod {
             verb_td += "</td>";
             method_td += "</td>";
             print += verb_td + method_td;
-
+            print += "</tr>";
         }
         print += "</table>";
         return print;
     }
 
-    public static String executeControllerMethod(Mapping mapping, HttpServletRequest request, HttpServletResponse response, String relativeURI, FrontController frontController) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, ClassNotFoundException, ServletException, IOException, MyException {
+    public static String executeControllerMethod(Mapping mapping, HttpServletRequest request, HttpServletResponse response, String relativeURI, FrontController frontController) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, ClassNotFoundException, ServletException, IOException, MyException, AuthenticationException, NullPointerException, RoleNotFoundException {
         String print = "";
         response.setContentType("text/html");
         print = "<h1>Code 200</h1>";
