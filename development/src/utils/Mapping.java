@@ -16,6 +16,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import annotation.Authentified;
+import annotation.DefaultNull;
+import annotation.Ignored;
 import annotation.ModelAttribute;
 import annotation.Param;
 import annotation.Restapi;
@@ -111,12 +113,25 @@ public class Mapping {
         if (parameters[i].getType() != MySession.class && parameters[i].getType() != FileUpload.class && paramValue == null) {
             throw new NullPointerException("There is an undefined parameter (parameter name : " + paramName + ")");
         } else {
-            if (parameters[i].getType() == int.class)                       values[i] = Integer.valueOf(paramValue);
-            else if (parameters[i].getType() == double.class)               values[i] = Double.valueOf(paramValue);
-            else if (parameters[i].getType() == float.class)                values[i] = Float.valueOf(paramValue);
-            else if (parameters[i].getType() == java.sql.Date.class)        values[i] = java.sql.Date.valueOf(paramValue);
-            else if (parameters[i].getType() == String.class)               values[i] = (String) paramValue;
-            else if (parameters[i].getType() == FileUpload.class) {
+            if (parameters[i].getType() == int.class)                           values[i] = Integer.valueOf(paramValue);
+            else if (parameters[i].getType() == double.class)                   values[i] = Double.valueOf(paramValue);
+            else if (parameters[i].getType() == float.class)                    values[i] = Float.valueOf(paramValue);
+            else if (parameters[i].getType() == boolean.class)                  values[i] = Boolean.valueOf(paramValue);
+            else if (parameters[i].getType() == java.sql.Date.class)            values[i] = java.sql.Date.valueOf(paramValue);
+            else if (parameters[i].getType() == java.sql.Time.class)            values[i] = java.sql.Time.valueOf(paramValue);
+            else if (parameters[i].getType() == java.sql.Timestamp.class)       values[i] = java.sql.Timestamp.valueOf(paramValue.replace('T', ' ') + ":00"); // Add seconds
+            else if (parameters[i].getType() == String.class)                   values[i] = (String) paramValue;
+            else if (parameters[i].getType() == java.sql.Timestamp.class) {
+                String parsedParamValue = paramValue.replace('T', ' ');
+                // Check if the format is YYYY-MM-DD HH:MM (length 16 after replacing 'T')
+                // If so, append ":00" to make it YYYY-MM-DD HH:MM:SS, which Timestamp.valueOf() expects.
+                if (parsedParamValue.length() == 16) {
+                    parsedParamValue += ":00";
+                }
+
+                values[i] = java.sql.Timestamp.valueOf(parsedParamValue);
+
+            } else if (parameters[i].getType() == FileUpload.class) {
                 values[i] = FileUpload.getFileUploadedfromFilePart(request.getPart(paramName));
 
             } else if (parameters[i].getType() == MySession.class) {
@@ -138,41 +153,68 @@ public class Mapping {
     public void setModelParam(Object controller, Method method, int i, Parameter[] parameters, Object[] values, HttpServletRequest request) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, ClassNotFoundException, ServletException, IOException {
         ModelAttribute attribute = parameters[i].getAnnotation(ModelAttribute.class);
         String modelName = null;
-        if (attribute == null)                                              throw new IllegalArgumentException("There is no @ModelAttribute annotation on the model parmeter (parameter place : no." + (i + 1) + " )");
+        if (attribute == null)                                              throw new IllegalArgumentException("There is no @ModelAttribute annotation on the model parameter (parameter place : no." + (i + 1) + " )");
         else                                                                modelName = attribute.name();
         Object model = Reflect.invokeEmptyConstructor(parameters[i].getType().getName());
         String[] fieldNames = Reflect.getFieldsNames(model);
         Field[] fields = model.getClass().getDeclaredFields();
 
         for (int j = 0; j < fieldNames.length; j++) {
-            String inputName = modelName + "." + fieldNames[j];
+            // Check if there is a DefaultNull annotation on a field to put a null value in it
+            DefaultNull defaultNull = fields[j].getAnnotation(DefaultNull.class);
+            Ignored ignored = fields[j].getAnnotation(Ignored.class);
 
-            String fieldValue = request.getParameter(inputName);
-            
-            if (fieldValue == null) {
-                throw new NullPointerException("There is an undefined field (field name : " + inputName + ")");
+            if (ignored != null) {
+                continue;
+                
+            } else if (defaultNull != null) {
+                Reflect.invokeSetterMethod(model, fieldNames[j], fields[j].getType(), null);
+                
             } else {
-                // Check the value of the field according to its annotation(s)
-                String error_message = Validator.check(fields[j], fieldValue);
-                if (error_message != null) {
-                    // Sprint 13
-                    // throw new IllegalArgumentException("Invalid value for field " + inputName + " : " + error_message);
+                String inputName = modelName + "." + fieldNames[j];
 
-                    // Sprint 14
-                    // Add the error message and the old value in the FormValidation
-                    formValidation.addError(inputName, error_message, fieldValue);
-
-                // if the Parameter is okay, adding its value in the formValidation in case of error in other field
+                String fieldValue = request.getParameter(inputName);
+                
+                if (fieldValue == null) {
+                    throw new NullPointerException("There is an undefined field (field no." + (j + 1) + " name : " + inputName + ")");
                 } else {
-                    formValidation.addError(inputName, null, fieldValue);
-                }
+                    // Check the value of the field according to its annotation(s)
+                    String error_message = Validator.check(fields[j], fieldValue);
+                    if (error_message != null) {
+                        // Sprint 13
+                        // throw new IllegalArgumentException("Invalid value for field " + inputName + " : " + error_message);
 
-                if (fields[j].getType() == int.class)                       Reflect.invokeSetterMethod(model, fieldNames[j], int.class, Integer.valueOf(fieldValue));
-                else if (fields[j].getType() == double.class)               Reflect.invokeSetterMethod(model, fieldNames[j], double.class, Double.valueOf(fieldValue));
-                else if (fields[j].getType() == float.class)                Reflect.invokeSetterMethod(model, fieldNames[j], float.class, Float.valueOf(fieldValue));
-                else if (fields[j].getType() == java.sql.Date.class)        Reflect.invokeSetterMethod(model, fieldNames[j], java.sql.Date.class, java.sql.Date.valueOf(fieldValue));
-                else if (fields[j].getType() == String.class)               Reflect.invokeSetterMethod(model, fieldNames[j], String.class, fieldValue);
-                else                                                        throw new IllegalStateException("The type " + fields[j].getType().getSimpleName() + " of the Field no." + (j + 1) + " " + fieldNames[j] + " of the Class " + parameters[i].getType().getSimpleName() + " of the Attribute no." + (i + 1) + " " + modelName + " of the Method " + method.getName() + " of the Controller " + controller.getClass().getSimpleName() + " is not supported");
+                        // Sprint 14
+                        // Add the error message and the old value in the FormValidation
+                        formValidation.addError(inputName, error_message, fieldValue);
+
+                    // if the Parameter is okay, adding its value in the formValidation in case of error in other field
+                    } else {
+                        formValidation.addError(inputName, null, fieldValue);
+                    }
+
+                    if (fields[j].getType() == int.class)                       Reflect.invokeSetterMethod(model, fieldNames[j], int.class, Integer.valueOf(fieldValue));
+                    else if (fields[j].getType() == double.class)               Reflect.invokeSetterMethod(model, fieldNames[j], double.class, Double.valueOf(fieldValue));
+                    else if (fields[j].getType() == float.class)                Reflect.invokeSetterMethod(model, fieldNames[j], float.class, Float.valueOf(fieldValue));
+                    else if (fields[j].getType() == boolean.class)              Reflect.invokeSetterMethod(model, fieldNames[j], boolean.class, Boolean.valueOf(fieldValue));
+                    else if (fields[j].getType() == java.sql.Date.class)        Reflect.invokeSetterMethod(model, fieldNames[j], java.sql.Date.class, java.sql.Date.valueOf(fieldValue));
+                    else if (fields[j].getType() == java.sql.Time.class)        Reflect.invokeSetterMethod(model, fieldNames[j], java.sql.Time.class, java.sql.Time.valueOf(fieldValue));
+                    else if (fields[j].getType() == String.class)               Reflect.invokeSetterMethod(model, fieldNames[j], String.class, fieldValue);
+
+                    else if (fields[j].getType() == java.sql.Timestamp.class) {
+                        String parsedFieldValue = fieldValue.replace('T', ' ');
+                        // Check if the format is YYYY-MM-DD HH:MM (length 16 after replacing 'T')
+                        // If so, append ":00" to make it YYYY-MM-DD HH:MM:SS, which Timestamp.valueOf() expects.
+                        if (parsedFieldValue.length() == 16) {
+                            parsedFieldValue += ":00";
+                        }
+                        // If it's already YYYY-MM-DD HH:MM:SS (length 19) or YYYY-MM-DD HH:MM:SS.sss (length 23),
+                        // it can be directly passed to valueOf().
+                        Reflect.invokeSetterMethod(model, fieldNames[j], java.sql.Timestamp.class, java.sql.Timestamp.valueOf(parsedFieldValue));
+                    }
+
+                    else                                                        throw new IllegalStateException("The type " + fields[j].getType().getSimpleName() + " of the Field no." + (j + 1) + " " + fieldNames[j] + " of the Class " + parameters[i].getType().getSimpleName() + " of the Attribute no." + (i + 1) + " " + modelName + " of the Method " + method.getName() + " of the Controller " + controller.getClass().getSimpleName() + " is not supported");
+                }
             }
         }
 
@@ -199,6 +241,13 @@ public class Mapping {
             
             String form_url = request.getParameter("form_url");
             System.out.println("form_url = " + form_url);
+
+            // Verify if there is an id in the request attribute to add it in the url
+            if (request.getParameter("id") != null) {
+                int id = Integer.parseInt(request.getParameter("id"));
+                request.setAttribute("id", id);
+                System.out.println("id detected");
+            }
 
             RequestDispatcher dispatcher = request.getRequestDispatcher(form_url);
             dispatcher.forward(request, response);
@@ -310,10 +359,11 @@ public class Mapping {
         return false;
     }
 
-    public String execute_html(HttpServletRequest request, HttpServletResponse response) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, ClassNotFoundException, ServletException, IOException, AuthenticationException, NullPointerException, RoleNotFoundException {
+    public String execute_html(HttpServletRequest request, HttpServletResponse response, String base_url) throws InstantiationException, IllegalAccessException, IllegalArgumentException, InvocationTargetException, NoSuchMethodException, SecurityException, ClassNotFoundException, ServletException, IOException, AuthenticationException, NullPointerException, RoleNotFoundException {
         String print = "";
         print += "<hr/>";
         print += "<h2> Listes des Controllers trouves: </h2>";
+        print += "<p>Base url: " + base_url + "</p>";
         print += "<p>Class: " + this.getClassName() + "</p>";
         print += "<p>Method: " + action.getMethodName() + "</p>";
         Object result = this.invokeMethod(request, response);
@@ -327,7 +377,7 @@ public class Mapping {
                 return "";
             } else {
                 ModelView mv = (ModelView)result;
-                mv.prepareModelView(request, response);
+                mv.prepareModelView(request, response, base_url);
             }
 
         } else {

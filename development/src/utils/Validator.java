@@ -66,14 +66,14 @@ public class Validator {
         if (range_annotation != null) {
             double numeric_value = Double.valueOf(value);
 
-            if (range_annotation.min() != null) {
+            if (!range_annotation.min().trim().isEmpty()) {
                 double min = Double.parseDouble(range_annotation.min());
                 if (numeric_value < min) {
                     error = range_annotation.message();
                 }
             }
             
-            if (range_annotation.max() != null && error != null) {
+            if (!range_annotation.max().trim().isEmpty() && error != null) {
                 double max = Double.parseDouble(range_annotation.max());
                 if (max < numeric_value) {
                     error = range_annotation.message();
@@ -82,11 +82,11 @@ public class Validator {
         }
 
         if (error != null) {
-            if (range_annotation.min() != null) {
+            if (!range_annotation.min().trim().isEmpty()) {
                 error = error.replace("{min}", range_annotation.min());
             }
 
-            if (range_annotation.max() != null) {
+            if (!range_annotation.max().trim().isEmpty()) {
                 error = error.replace("{max}", range_annotation.max());
             }
         }

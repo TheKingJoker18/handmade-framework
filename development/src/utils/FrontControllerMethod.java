@@ -115,7 +115,7 @@ public class FrontControllerMethod {
                 print = mapping.execute_json(request, response);
     
             } else {
-                print += mapping.execute_html(request, response);
+                print += mapping.execute_html(request, response, frontController.getBase_url());
 
                 if (method.equalsIgnoreCase("GET")) {
                     print += "<h2>Request method: GET</h2>";

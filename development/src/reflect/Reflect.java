@@ -6,6 +6,7 @@ import java.lang.reflect.Method;
 
 import javax.servlet.http.HttpServletRequest;
 
+import annotation.Ignored;
 import annotation.ModelField;
 import utils.MySession;
 
@@ -32,8 +33,10 @@ public class Reflect {
 
         for (int i = 0; i < fields.length; i++) {
             ModelField field = fields[i].getAnnotation(ModelField.class);
-            if (field == null)              throw new IllegalArgumentException("There is no @ModelField annotation on the field (field place : no." + (i + 1) + " )");
-            else                            fieldsNames[i] = field.name();
+            Ignored ignored = fields[i].getAnnotation(Ignored.class);
+            if (ignored != null)                                continue;
+            else if (field == null && ignored == null)          throw new IllegalArgumentException("There is no @ModelField annotation on the field (field place : no." + (i + 1) + " )");
+            else                                                fieldsNames[i] = field.name();
         }
 
         return fieldsNames;
