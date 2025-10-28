@@ -57,15 +57,17 @@ public class FileUpload {
     }
 
     public String getFileType() {
-        // Détection du type de fichier en fonction de son extension ou de son contenu
-        String fileName = this.getName().toLowerCase();
+        if (this.getName() != null) {
+            // Détection du type de fichier en fonction de son extension ou de son contenu
+            String fileName = this.getName().toLowerCase();
 
-        if (fileName.endsWith(".txt") || fileName.endsWith(".csv") || fileName.endsWith(".json") || fileName.endsWith(".md")) {
-            return "text";  // Si le fichier est un fichier texte
-        } else if (fileName.endsWith(".jpg") || fileName.endsWith(".jpeg") || fileName.endsWith(".png")) {
-            return "image"; // Si le fichier est une image
+            if (fileName.endsWith(".txt") || fileName.endsWith(".csv") || fileName.endsWith(".json") || fileName.endsWith(".md")) {
+                return "text";  // Si le fichier est un fichier texte
+            } else if (fileName.endsWith(".jpg") || fileName.endsWith(".jpeg") || fileName.endsWith(".png")) {
+                return "image"; // Si le fichier est une image
+            }
+            // Ajouter d'autres types de fichiers ici selon les besoins
         }
-        // Ajouter d'autres types de fichiers ici selon les besoins
         return "unknown";  // Si le type est inconnu
     }
 

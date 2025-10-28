@@ -19,6 +19,7 @@ import utils.*;
 @AnnotationController(name = "big_controller")
 public class FrontController extends HttpServlet {
     private String controllerPackage;
+    private String base_url;
     private ControllerScanner scanner;
     private List<Class<?>> controllers;
     private HashMap<String, Mapping> methodList;
@@ -28,6 +29,13 @@ public class FrontController extends HttpServlet {
     }
     public void setControllerPackage(String controllerPackage) {
         this.controllerPackage = controllerPackage;
+    }
+    
+    public String getBase_url() {
+        return this.base_url;
+    }
+    public void setBase_url(String base_url) {
+        this.base_url = base_url;
     }
 
     public ControllerScanner getScanner() {
@@ -57,7 +65,7 @@ public class FrontController extends HttpServlet {
         try {
             super.init(config);
 
-            // Récupérer le paramètre d'initialisation depuis ServletConfig
+            // Récupérer le paramètre d'initialisation de controllerPackage depuis ServletConfig
             this.controllerPackage = config.getInitParameter("base_package");
 
             if (this.controllerPackage == null) {
@@ -65,6 +73,15 @@ public class FrontController extends HttpServlet {
             }
 
             // System.out.println("Controller package: " + this.controllerPackage); // Debug
+
+            // Récupérer le paramètre d'initialisation de base_url depuis ServletConfig
+            this.base_url = config.getInitParameter("base_url");
+
+            if (this.base_url == null) {
+                throw new ServletException("Base url is not specified in web.xml");
+            }
+
+            // System.out.println("Base url: " + this.controllerPackage); // Debug
 
             this.scanner = new ControllerScanner();
             this.controllers = scanner.findControllers(this.controllerPackage);
@@ -110,6 +127,7 @@ public class FrontController extends HttpServlet {
             print = "<h1>Code " + code + "</h1>";
             print += "<hr/>";
             print += "<p>There was an error processing the request: <b>ETU002556 <br/> " + e.getMessage() + " </b> <p>";
+            print += "<p> <a href=\"" + this.getBase_url() + "\"><button>Go back to Home Page</button></a> </p>";
             e.printStackTrace();
             out.println(print);
         }
@@ -129,6 +147,7 @@ public class FrontController extends HttpServlet {
             print = "<h1>Code " + code + "</h1>";
             print += "<hr/>";
             print += "<p>There was an error processing the request: <b>ETU002556 <br/> " + e.getMessage() + " </b> <p>";
+            print += "<p> <a href=\"" + this.getBase_url() + "\"><button>Go back to Home Page</button></a> </p>";
             e.printStackTrace();
             out.println(print);
         }

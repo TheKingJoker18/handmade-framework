@@ -5,8 +5,12 @@ import javax.servlet.http.HttpSession;
 public class MySession {
     HttpSession session;
 
-    public HttpSession getSession() { return this.session; }
-    public void setSession(HttpSession session) { this.session = session; }
+    public HttpSession getSession() {
+        return this.session;
+    }
+    public void setSession(HttpSession session) {
+        this.session = session;
+    }
 
     public MySession() {}
     public MySession(HttpSession session) {
@@ -27,6 +31,11 @@ public class MySession {
         HttpSession session = this.getSession();
         session.removeAttribute(name);
         this.setSession(session);
+    }
+
+    public void reset() {
+        HttpSession session = this.getSession();
+        session.invalidate();
     }
 
 }

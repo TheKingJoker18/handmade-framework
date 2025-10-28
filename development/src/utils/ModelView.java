@@ -1,6 +1,8 @@
 package utils;
 
 import java.io.IOException;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -47,16 +49,27 @@ public class ModelView {
         this.setData(data);
     }
 
-    public void prepareModelView(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    public void prepareModelView(HttpServletRequest request, HttpServletResponse response, String base_url) throws ServletException, IOException {
         String url = this.getUrl();
         HashMap<String, Object> data = this.getData();
 
-        // Adding "../" to avoid that the framework will try to find the view in the AnnotationController name
-        RequestDispatcher dispatcher = request.getRequestDispatcher("../" + url);
+        // Adding "/" to avoid that the framework will try to find the view in the AnnotationController name
+        RequestDispatcher dispatcher = request.getRequestDispatcher("/" + url);
 
         for (Map.Entry<String, Object> entry : data.entrySet()) {
             request.setAttribute(entry.getKey(), entry.getValue());
         }
+
+        // Also add base url in the request attributes
+        request.setAttribute("base_url", base_url);
+
+        // Add a default formatter for decimals numbers
+        DecimalFormatSymbols symbols = new DecimalFormatSymbols();
+        symbols.setGroupingSeparator(','); // Séparateur de milliers
+
+        DecimalFormat formatter = new DecimalFormat("#,###.##", symbols); // Format avec deux décimales
+        request.setAttribute("formatter", formatter);
+
         dispatcher.forward(request, response);
     }
 
