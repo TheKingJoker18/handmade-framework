@@ -11,11 +11,15 @@
 
     <servlet>
         <servlet-name>controller</servlet-name>
-        <servlet-class>controller.FrontController</servlet-class>
+        <servlet-class>com.thekingjoker18.handmade_framework.controller.FrontController</servlet-class>
         <!--  All Controller Package  -->
         <init-param>
             <param-name>base_package</param-name>
-            <param-value>controller</param-value>
+            <param-value>com.example.controller</param-value>
+        </init-param>
+        <init-param>
+            <param-name>base_url</param-name>
+            <param-value>/Handmade_Framework</param-value>
         </init-param>
     </servlet>
 
@@ -26,6 +30,15 @@
 
 
     <!-- Declaration of the used Servlet -->
+    <servlet>
+        <servlet-name>ExampleServlet</servlet-name>
+        <servlet-class>com.example.servlet.ExampleServlet</servlet-class>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>ExampleServlet</servlet-name>
+        <url-pattern>/ExampleServlet</url-pattern>
+    </servlet-mapping>
 
 
 

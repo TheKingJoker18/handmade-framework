@@ -2,7 +2,7 @@
 
 rem Creation des variables
 set "temp=.\temp"
-set "src=.\src"
+set "src=.\src\com\thekingjoker18\handmade_framework"
 set "lib=..\test\lib"
 set "bin=.\bin"
 set "destination=..\test\lib"
