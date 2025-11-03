@@ -12,7 +12,9 @@ A lightweight **Java-based web framework** designed to handle servlet-based appl
 - [Requirements](#requirements)
 - [Features](#features)
 - [Project Timeline (Sprints)](#project-timeline-sprints)
-- [Setup Instructions](#setup-instructions)
+- [Test Project (Usage Example)](#test-project-usage-example)
+- [Setup Instructions (Compiling the Framework)](#setup-instructions-compiling-the-framework)
+- [Deploying the Test Project](#deploying-the-test-project)
 - [Usage Notes](#usage-notes)
 - [Bug Reports](#bug-reports)
 
@@ -114,9 +116,33 @@ The framework offers a comprehensive set of tools for modern web development:
 - **Session**: Added `MySession.reset()` to clear session data.
 - **Error Handling**: Updated `FrontController.doGet/doPost` to include a button to return to the `base_url` on exception.
 
+### Sprint 18: Rectification and Improvement no.2
+
+- **Package Refactoring**: Modified all classes from `src` to use the package name `com.thekingjoker18.handmade_framework` to prevent conflicts when the framework is used as a library.
+- **Test Project Uploaded**: Uploaded a complete test project to the GitHub repository to provide a tangible example of how to use the framework.
+- **Web.xml Example**: Updated the `web.xml.example` to reflect the new package name for the controller servlet.
+
 ---
 
-## Setup Instructions
+## Test Project (Usage Example)
+
+To see a practical, working example of how to use this framework, please see the **test project** included in the main GitHub repository.
+
+This test project demonstrates:
+
+- Controller setup
+- Form handling (simple and model-based)
+- File uploads
+- Session management (login/logout)
+- Data validation
+
+It also includes a detailed **`HOWTOUSE.md`** file that guides you through the examples.
+
+---
+
+## Setup Instructions (Compiling the Framework)
+
+Follow these steps to compile the framework into a `.jar` file, which you can then include in your own web projects.
 
 1. **Clone the Repository**:
 
@@ -127,29 +153,33 @@ The framework offers a comprehensive set of tools for modern web development:
 2. **Install Java 8+**:
     Ensure Java 8 or higher is installed.
 
-3. **Set Up a Servlet-Compatible Server**:
-    Deploy the application on a server like Apache Tomcat.
+3. **Add Dependencies**:
+    Ensure all dependencies (like `servlet-api.jar` and `gson.jar`) are available. The `compilate.bat` script expects them in `..\test\lib`.
 
-4. **Add Dependencies**:
-    Include the Gson library for JSON support. Ensure all dependencies (like `servlet-api.jar`) are available in the library folder referenced by the compile script (e.g., `../test/lib` as seen in `compilate.bat` [cite: 2]).
-
-5. **Compile the Framework**:
+4. **Compile the Framework**:
 
     - **On Windows**:
         1. Navigate to the `development` folder (where `compilate.bat` is located).
-        2. Run the `compilate.bat` script[cite: 2].
-        3. This will compile the Java source files from `src` into the `bin` folder [cite: 2], create the `handmade_framework.jar` file [cite: 2], and clean up temporary files[cite: 2].
+        2. **Important:** Before running, you **must edit `compilate.bat`** and change the `lib` and `destination` variables to point to your project's `lib` folder.
+        3. Run the `compilate.bat` script.
+        4. This will compile the Java source files, create the `handmade_framework.jar` file, and copy it to your specified `destination` folder[cite: 4].
 
     - **On Linux/macOS**:
-        You can run the following equivalent shell commands from the framework's root directory. (Note: You may need to adjust the `LIB_DIR` variable to point to your dependencies).
+        Run the following commands from the framework's root directory.
+
+        **Note:** You must adjust the `LIB_DIR` and `DESTINATION_DIR` variables to match your project's paths.
 
         ```bash
         #!/bin/bash
         
-        # Define variables
-        SRC_DIR="./src"
+        # --- CONFIGURATION ---
+        # Adjust these paths to your dependencies and target project
+        LIB_DIR="../test/lib" 
+        DESTINATION_DIR="../test/lib"
+        # ---------------------
+
+        SRC_DIR="./src/com/thekingjoker18/handmade_framework"
         BIN_DIR="./bin"
-        LIB_DIR="../test/lib" # Adjust this path to your dependencies
         JAR_NAME="handmade_framework.jar"
 
         # Clean and create bin directory
@@ -167,15 +197,41 @@ The framework offers a comprehensive set of tools for modern web development:
         echo "Creating JAR file..."
         jar cvf "$JAR_NAME" -C "$BIN_DIR" .
 
-        echo "Compilation complete: $JAR_NAME created."
+        # Copy JAR to destination
+        echo "Copying $JAR_NAME to $DESTINATION_DIR..."
+        cp "$JAR_NAME" "$DESTINATION_DIR/"
+
+        echo "Compilation complete."
         ```
 
-6. **Deploy and Run**:
-    1. Take the `handmade_framework.jar` file generated in the previous step.
-    2. Place this `.jar` file into the **`WEB-INF/lib`** directory of the web application project you are developing.
-    3. Deploy your web application to your servlet container (e.g., Tomcat) and run it.
+5. **Add to Your Project**:
+    Place the generated `handmade_framework.jar` file into the **`WEB-INF/lib`** directory of the web application project you are developing.
 
     **NB**: Don't forget to verify if your **`web.xml`** follows the given example on the 'main' repository for proper framework configuration.
+
+---
+
+## Deploying the Test Project
+
+The included test project has its own deployment script, `deploiement.bat`, to automate building and deploying it to a Tomcat server.
+
+1. **Compile the Framework First**:
+    Before deploying the test project, you must first compile the framework (see steps above) and ensure the `handmade_framework.jar` is in the test project's `lib` folder.
+
+2. **Configure Deployment Script**:
+    - Navigate to the test project's root folder.
+    - **Important:** Open `deploiement.bat` in a text editor.
+    - You **must change the `webapps` variable** to match the `webapps` directory of your Tomcat (or other) server.
+    - Example: `set "webapps=C:\Program Files\Apache-Tomcat-9.0\webapps"`
+
+3. **Run the Deployment Script**:
+    - Execute `deploiement.bat`.
+    - The script will:
+        1. Create a temporary staging directory.
+        2. Copy your test project's web files (JSPs, CSS), `web.xml`, and all libraries (including the framework `.jar`) into it.
+        3. Compile your test project's `.java` files (controllers, models, servlets).
+        4. Bundle everything into a `.war` file.
+        5. Copy the `.war` file directly to your server's `webapps` directory[cite: 2], where it will be automatically deployed.
 
 ---
 
